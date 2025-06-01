@@ -1,3 +1,5 @@
+![mediaddrr logo](docs/logo_small.png)
+
 # mediaddrr
 
 mediaddrr is a web application designed to receive webhooks from [autobrr](https://autobrr.com/) and add the requested media to your other `arr` app instances. Currently, it supports adding **movies** to [Radarr](https://radarr.video/).
