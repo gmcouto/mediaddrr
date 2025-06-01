@@ -1,0 +1,17 @@
+services:
+  mediaddrr:
+    # build: .
+    image: gmcouto/mediaddrr:latest
+    container_name: mediaddrr
+    ports:
+      - '3000:3000'
+    environment:
+      - TZ=UTC
+      - HOST_OS=debian
+      - HOST_HOSTNAME=docker
+      - PUID=1000
+      - PGID=1000
+      - UMASK=003
+    volumes:
+      - ./config/:/app/config/:rw
+    restart: unless-stopped

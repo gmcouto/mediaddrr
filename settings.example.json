@@ -1,0 +1,13 @@
+{
+  "tmdbToken": {
+    "token": "your-tmdb-token-here"
+  },
+  "radarrInstances": {
+    "radarr-uhd": {
+      "url": "http://[radarr-url]/api/v3/movie?apikey=[your-radarr-api-key-here]",
+      "qualityProfileId": [radarr-profile-id-here],
+      "tagId0": [radarr-tag-id-here],
+      "rootFolderPath": "[radarr-root-folder-path-here]"
+    }
+  }
+}

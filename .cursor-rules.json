@@ -1,0 +1,88 @@
+{
+  "rules": [
+    {
+      "pattern": "src/**/*.{ts,tsx,js,jsx}",
+      "action": "format",
+      "options": { "semi": false, "singleQuote": true, "trailingComma": "all" }
+    },
+    {
+      "pattern": "src/**/*.{ts,tsx,js,jsx}",
+      "action": "lint",
+      "options": { "fix": true }
+    },
+    {
+      "pattern": "src/**/*.css",
+      "action": "format",
+      "options": { "parser": "css" }
+    },
+    {
+      "pattern": "src/**/*.css",
+      "action": "lint",
+      "options": { "fix": true }
+    },
+    {
+      "pattern": "src/styles/**/*.css",
+      "action": "format",
+      "options": { "parser": "css" }
+    },
+    {
+      "pattern": "src/styles/**/*.css",
+      "action": "lint",
+      "options": { "fix": true }
+    },
+    {
+      "pattern": "src/**/*.json",
+      "action": "format",
+      "options": { "parser": "json" }
+    },
+    {
+      "pattern": "src/**/*.md",
+      "action": "format",
+      "options": { "parser": "markdown" }
+    },
+    {
+      "pattern": "README.md",
+      "action": "protect"
+    },
+    {
+      "pattern": "package.json",
+      "action": "protect"
+    },
+    {
+      "pattern": "node_modules/**",
+      "action": "ignore"
+    },
+    {
+      "pattern": ".next/**",
+      "action": "ignore"
+    },
+    {
+      "pattern": "public/**",
+      "action": "ignore"
+    },
+    {
+      "pattern": "bun.lock",
+      "action": "protect"
+    },
+    {
+      "pattern": "yarn.lock",
+      "action": "protect"
+    },
+    {
+      "pattern": "pnpm-lock.yaml",
+      "action": "protect"
+    },
+    {
+      "pattern": "package-lock.json",
+      "action": "protect"
+    },
+    {
+      "pattern": "Dockerfile",
+      "action": "protect"
+    },
+    {
+      "pattern": "docker-compose.yml",
+      "action": "protect"
+    }
+  ]
+} 
