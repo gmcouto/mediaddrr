@@ -1,7 +1,6 @@
 // logger.ts
 import * as rfs from 'rotating-file-stream';
 import fs from 'fs';
-import { ZodError } from 'zod';
 
 const logDirectory = './config/logs';
 

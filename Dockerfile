@@ -18,13 +18,11 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Default build command
+# ENV NEXT_TELEMETRY_DISABLED=1
+# RUN bun run build --debug --no-lint
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN bun run build
 
 # Production image, copy all the files and run next
 FROM base AS runner

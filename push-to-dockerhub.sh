@@ -22,6 +22,8 @@ IMAGE_NAME=mediaddrr
 
 # Build the image
 
+NEXT_TELEMETRY_DISABLED=1 bun run build --debug --no-lint
+
 echo "Building Docker image..."
 docker build --progress=plain --builder $BUILDER --platform $PLATFORM -t $IMAGE_NAME .
 
