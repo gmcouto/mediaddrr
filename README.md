@@ -79,6 +79,7 @@ Add a webhook in autobrr with the following settings:
     "year": {{.Year}}
   }
   ```
+You can also add `"tmdbId": {{ .Tags }}` if some of your trackers support tmdbId on the parsing.
 
 > **Important:**
 > When configuring your actions in autobrr, **ensure that the Radarr action runs _after_ the mediaddrr action**. This is required for proper operation. If you disable or remove the Radarr action, movies will not be downloaded by your Radarr instance. See the example below:
