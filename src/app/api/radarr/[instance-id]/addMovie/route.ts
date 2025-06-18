@@ -1,22 +1,12 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { getRadarrInstance } from '~/domain/settings/util';
 import { addMovie } from '~/domain/radarr/addMovie';
 import { getFirstPopularTmdbMovie } from '~/domain/tmdb/getFirstPopularTmdbMovie';
 import { isValidTmdbId } from '~/domain/tmdb/isValidTmdbId';
 import { logger } from '~/logger';
 import type { TmdbMovieDetail } from '~/domain/tmdb/types';
-
-export const requestBodySchema = z.object({
-  query: z.string(),
-  year: z.number().transform((val) => (typeof val === 'number' ? val : parseInt(val, 10))),
-  tmdbId: z
-    .string()
-    .or(z.number())
-    .optional()
-    .transform((val) => String(val).trim()),
-});
+import { requestBodySchema } from './schema';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ 'instance-id': string }> }) {
   const { 'instance-id': instanceId } = await params;

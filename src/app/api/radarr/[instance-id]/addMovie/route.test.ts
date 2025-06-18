@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { requestBodySchema } from './route';
+import { requestBodySchema } from './schema';
 
 const testInput = { query: 'Black War Mission Extreme 2', year: 2023, tmdbId: 993637 };
 
