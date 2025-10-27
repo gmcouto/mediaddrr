@@ -1,0 +1,42 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+// AI Coding Rules for mediaddr
+
+// General Principles
+- Always act as a senior engineer: prioritize code quality, maintainability, and simplicity.
+- Reduce bugs by using strict TypeScript types and exhaustive checks.
+- Refactor verbose or repetitive code into reusable, well-named functions.
+- Prefer functional programming patterns over imperative code.
+- Write descriptive, intention-revealing code and variable names.
+- Error handling must be done always whenever an issue is possible, with all the proper logging using the logger when the code is on the backend.
+
+// Project & Framework Conventions
+- Use bun for dependency management, and use `bun -b` to force bun usage instead of node.
+- Use the latest Next.js best practices for routing, data fetching, and component structure.
+- All components must be simple, easy to understand, and strictly typed.
+- Use TailwindCSS for all styling; do not use inline styles or direct CSS unless absolutely necessary.
+- Html classnames that have complex logic should use cn(classnames) function to build the classNames
+- Prefer using base component blocks from the `chadcdn` component repository whenever possible.
+
+// Forms & State Management
+- All forms must use `tanstack-form` for form and state management.
+- All frontend-to-backend calls and client-side state management must use `tanstack-query` (React Query).
+- Avoid using local React state for data that can be managed by `tanstack-query` or `tanstack-form`.
+
+// Code Style
+- Avoid magic numbers and hardcoded strings; use constants or enums.
+- Write pure functions where possible; avoid side effects.
+- Add comments only where the code's intention is not obvious.
+- Prefer composition over inheritance.
+- Keep files and functions small and focused on a single responsibility.
+
+// Testing & Validation
+- Ensure all code is easily testable and follows best practices for error handling and validation.
+- Validate all user input on both client and server sides using appropriate schemas or validation libraries.
+
+// Documentation
+- Add JSDoc comments for all exported functions, components, and complex logic.
+- Update README or relevant documentation when introducing new patterns or dependencies.

@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { getFirstPopularTmdbMovie } from '../../../domain/tmdb/getFirstPopularTmdbMovie';
 import { z } from 'zod';
+import { logger } from '~/logger';
 
 const FindMovieRequestSchema = z.object({
   query: z.string(),
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
     const body: unknown = await request.json();
     const parseResult = FindMovieRequestSchema.safeParse(body);
     if (!parseResult.success) {
-      console.error(parseResult.error);
+      logger.error(`Invalid request for TMDB API: ${JSON.stringify(body)}`);
       return NextResponse.json({ error: 'Missing or invalid query' }, { status: 400 });
     }
     const { query, year } = parseResult.data;

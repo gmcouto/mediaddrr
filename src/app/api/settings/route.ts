@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const body: unknown = await request.json();
     const parsed = SettingsSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid settings format', details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid settings format', details: parsed.error.issues }, { status: 400 });
     }
     await setSettings(parsed.data);
     return NextResponse.json({ success: true });

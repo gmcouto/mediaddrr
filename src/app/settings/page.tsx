@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { CenteredContainer } from '../../components/containers/CenteredContainer';
-import { createFormHook } from '@tanstack/react-form';
+import { createFormHook, FormApi } from '@tanstack/react-form';
 import { Button } from '~/components/ui/Button';
 import { TextField } from './_components/TextField';
 import { SubscribeButton } from './_components/SubscribeButton';
@@ -18,7 +18,6 @@ import {
   type SettingsForm,
 } from './_util/schema';
 import { SensitiveTextField } from './_components/SensitiveTextField';
-import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { cn } from '~/lib/utils';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SettingsSchema } from '../../domain/settings/schema';
@@ -27,6 +26,8 @@ import { TextOrSelectField } from './_components/TextOrSelectField';
 import type { RadarrTagResponse } from '~/domain/radarr/getTags';
 import type { RadarrRootFolderResponse } from '~/domain/radarr/getRootFolders';
 import { fieldContext, formContext } from './_util/form';
+import { AnimatedDiv } from '~/components/containers/AnimatedDiv';
+import z from 'zod';
 
 const getQualityProfilesOptions = async (radarrInstance: { baseUrl: string; apiKey: string }) => {
   const qualityProfiles = await fetch(`/api/radarr/getQualityProfiles`, {
@@ -60,7 +61,6 @@ const { useAppForm } = createFormHook({
 });
 
 function SettingsFormContent() {
-  const [radarrListRef] = useAutoAnimate<HTMLDivElement>();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [errorLoadingOptions, setErrorLoadingOptions] = useState<Record<string, string | null>>({});
   const [qualityProfilesOptions, setQualityProfilesOptions] = useState<MapOfSelectOptions>({});
@@ -68,7 +68,7 @@ function SettingsFormContent() {
   const [rootFoldersOptions, setRootFoldersOptions] = useState<MapOfSelectOptions>({});
   const queryClient = useQueryClient();
   const {
-    data: fetchedSettings,
+    data: settingsData,
     isLoading,
     isError,
     error: fetchError,
@@ -86,6 +86,7 @@ function SettingsFormContent() {
     },
     refetchOnWindowFocus: false,
   });
+  const fetchedSettings = settingsData as unknown as SettingsForm;
 
   const saveMutation = useMutation<boolean, Error, SettingsForm>({
     mutationFn: async (settingsToSave: SettingsForm) => {
@@ -146,15 +147,19 @@ function SettingsFormContent() {
     }
   }, []);
 
-  const form = useAppForm({
-    defaultValues: fetchedSettings ?? {
-      tmdbConfig: {
-        token: '',
-      },
-      radarrInstances: [{ id: '', baseUrl: '', apiKey: '', qualityProfileId: '', tagId0: '', rootFolderPath: '' }],
+  const DEFAULT_FORM: SettingsForm = {
+    tmdbConfig: {
+      token: '',
     },
+    radarrInstances: [],
+    rssFeeds: [],
+  };
+
+  const form = useAppForm({
+    defaultValues: fetchedSettings || DEFAULT_FORM,
     validators: {
-      onChange: SettingsFormSchema,
+      onBlur: SettingsFormSchema,
+      onSubmit: SettingsFormSchema,
     },
     onSubmit: (values) => {
       saveMutation.mutate(values.value);
@@ -202,11 +207,16 @@ function SettingsFormContent() {
         {(radarrField) => (
           <div>
             <h3 className="text-2l mb-4 pt-4 font-bold">Radarr Instances</h3>
-            <div className="space-y-6" ref={radarrListRef}>
+            <AnimatedDiv className="space-y-6">
               {radarrField.state.value.map((_, radarrIndex) => (
-                <div key={radarrIndex} className="mb-4 flex flex-col gap-2 rounded-lg border p-4">
+                <div
+                  key={radarrField.state?.value?.[radarrIndex]?.key}
+                  className="mb-4 flex flex-col gap-2 rounded-lg border p-4"
+                >
                   <form.AppField name={`radarrInstances[${radarrIndex}].id`}>
-                    {(_) => <TextField label="Identifier" placeholder="Enter an identifier for the instance" />}
+                    {(_) => (
+                      <TextField label="Instance Identifier" placeholder="Enter an identifier for the instance" />
+                    )}
                   </form.AppField>
                   <form.AppField name={`radarrInstances[${radarrIndex}].baseUrl`}>
                     {(_) => <TextField label="Base URL" placeholder="Enter the base URL for the instance" />}
@@ -289,6 +299,7 @@ function SettingsFormContent() {
                 variant="default"
                 onClick={() =>
                   radarrField.pushValue({
+                    key: crypto.randomUUID(),
                     id: '',
                     baseUrl: '',
                     apiKey: '',
@@ -301,13 +312,238 @@ function SettingsFormContent() {
               >
                 Add Radarr Instance
               </Button>
-            </div>
+            </AnimatedDiv>
           </div>
         )}
       </form.Field>
+
+      <form.Field name="rssFeeds">
+        {(rssFeedsField) => (
+          <div>
+            <h3 className="text-2l mb-4 pt-4 font-bold">RSS Feeds</h3>
+            <AnimatedDiv className="space-y-6">
+              {rssFeedsField.state.value.map((feed, feedIndex) => (
+                <div key={feedIndex} className="mb-4 flex flex-col gap-2 rounded-lg border p-4">
+                  <form.AppField name={`rssFeeds[${feedIndex}].id`}>
+                    {(_) => <TextField label="Feed Identifier" placeholder="Enter a name for this RSS feed" />}
+                  </form.AppField>
+                  <form.AppField name={`rssFeeds[${feedIndex}].url`}>
+                    {(_) => (
+                      <SensitiveTextField
+                        label="Feed URL"
+                        placeholder="Enter the RSS feed URL"
+                        toggleHideLabel="Hide"
+                        toggleShowLabel="Show"
+                        hidePasswordMessage="Hide Feed URL"
+                        showPasswordMessage="Show Feed URL"
+                      />
+                    )}
+                  </form.AppField>
+                  <div>
+                    <label className="mb-2 block font-medium">Tag Processors</label>
+                    <form.Field name={`rssFeeds[${feedIndex}].processors`}>
+                      {(processorsField) => (
+                        <AnimatedDiv className="space-y-4">
+                          {processorsField.state.value.map((processor, processorIndex) => (
+                            <div key={processorIndex} className="rounded-lg border p-4">
+                              <form.AppField name={`rssFeeds[${feedIndex}].processors[${processorIndex}].tag`}>
+                                {(_) => <TextField label="Tag Name" placeholder="Enter XML tag name" />}
+                              </form.AppField>
+                              <form.AppField name={`rssFeeds[${feedIndex}].processors[${processorIndex}].output`}>
+                                {(_) => <TextField label="Output Template" placeholder="Enter output template" />}
+                              </form.AppField>
+                              <div>
+                                <label className="mb-2 block font-medium">Variables</label>
+                                <form.Field name={`rssFeeds[${feedIndex}].processors[${processorIndex}].variables`}>
+                                  {(variablesField) => (
+                                    <AnimatedDiv className="space-y-3">
+                                      {variablesField.state.value.map((variable, variableIndex) => (
+                                        <div
+                                          key={variable.key /* must use key for reorder */}
+                                          className="rounded border p-3"
+                                        >
+                                          <form.AppField
+                                            name={`rssFeeds[${feedIndex}].processors[${processorIndex}].variables[${variableIndex}].name`}
+                                          >
+                                            {(_) => (
+                                              <TextField
+                                                label="Variable Name"
+                                                placeholder="Enter variable name to persist to"
+                                              />
+                                            )}
+                                          </form.AppField>
+                                          <form.AppField
+                                            name={`rssFeeds[${feedIndex}].processors[${processorIndex}].variables[${variableIndex}].from`}
+                                          >
+                                            {(_) => (
+                                              <TextField
+                                                label="Base Var"
+                                                placeholder="Enter source variable name or leave empty to use source text"
+                                              />
+                                            )}
+                                          </form.AppField>
+                                          <form.AppField
+                                            name={`rssFeeds[${feedIndex}].processors[${processorIndex}].variables[${variableIndex}].regex`}
+                                          >
+                                            {(_) => (
+                                              <TextField label="Regex Pattern" placeholder="Enter regex pattern" />
+                                            )}
+                                          </form.AppField>
+                                          <form.AppField
+                                            name={`rssFeeds[${feedIndex}].processors[${processorIndex}].variables[${variableIndex}].replaceWith`}
+                                          >
+                                            {(_) => (
+                                              <TextField label="Replace With" placeholder="Enter replacement string" />
+                                            )}
+                                          </form.AppField>
+                                          <div className="mt-2 flex gap-2">
+                                            {variableIndex > 0 && (
+                                              <Button
+                                                type="button"
+                                                variant="default"
+                                                onClick={() => {
+                                                  const current = variablesField.state.value[variableIndex];
+                                                  const previous = variablesField.state.value[variableIndex - 1];
+                                                  if (!current || !previous) return;
+                                                  variablesField.setValue((prev) => {
+                                                    const newValue = [...prev];
+                                                    newValue[variableIndex - 1] = current;
+                                                    newValue[variableIndex] = previous;
+                                                    return newValue;
+                                                  });
+                                                }}
+                                                className={cn(
+                                                  'flex-1 border-none bg-blue-950 text-white hover:bg-blue-900',
+                                                )}
+                                              >
+                                                Move Up
+                                              </Button>
+                                            )}
+                                            {variableIndex < variablesField.state.value.length - 1 && (
+                                              <Button
+                                                type="button"
+                                                variant="default"
+                                                onClick={() => {
+                                                  const current = variablesField.state.value[variableIndex];
+                                                  const next = variablesField.state.value[variableIndex + 1];
+                                                  if (!current || !next) return;
+                                                  variablesField.setValue((prev) => {
+                                                    const newValue = [...prev];
+                                                    newValue[variableIndex] = next;
+                                                    newValue[variableIndex + 1] = current;
+                                                    return newValue;
+                                                  });
+                                                }}
+                                                className={cn(
+                                                  'flex-1 border-none bg-blue-950 text-white hover:bg-blue-900',
+                                                )}
+                                              >
+                                                Move Down
+                                              </Button>
+                                            )}
+                                            <Button
+                                              type="button"
+                                              variant="default"
+                                              onClick={() => variablesField.removeValue(variableIndex)}
+                                              className={cn(
+                                                'flex-1 border-none bg-red-950 text-white hover:bg-red-900',
+                                              )}
+                                            >
+                                              Remove Variable
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                      <Button
+                                        type="button"
+                                        variant="default"
+                                        onClick={() =>
+                                          variablesField.pushValue({
+                                            key: crypto.randomUUID(),
+                                            name: '',
+                                            from: '',
+                                            regex: '',
+                                            replaceWith: '',
+                                          })
+                                        }
+                                        className={cn('border-none bg-green-950 text-white hover:bg-green-900')}
+                                      >
+                                        Add Variable
+                                      </Button>
+                                    </AnimatedDiv>
+                                  )}
+                                </form.Field>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="default"
+                                onClick={() => processorsField.removeValue(processorIndex)}
+                                className={cn('mt-2 border-none bg-red-950 text-white hover:bg-red-900')}
+                              >
+                                Remove Processor
+                              </Button>
+                            </div>
+                          ))}
+                          <Button
+                            type="button"
+                            variant="default"
+                            onClick={() =>
+                              processorsField.pushValue({
+                                tag: '',
+                                variables: [],
+                                output: '',
+                              })
+                            }
+                            className={cn('border-none bg-green-950 text-white hover:bg-green-900')}
+                          >
+                            Add Processor
+                          </Button>
+                        </AnimatedDiv>
+                      )}
+                    </form.Field>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="default"
+                    onClick={() => rssFeedsField.removeValue(feedIndex)}
+                    className={cn('mt-2 border-none bg-red-950 text-white hover:bg-red-900')}
+                  >
+                    Remove Feed
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="default"
+                onClick={() =>
+                  rssFeedsField.pushValue({
+                    id: '',
+                    url: '',
+                    processors: [],
+                  })
+                }
+                className={cn('mt-2 w-full border-none bg-green-950 text-white hover:bg-green-900')}
+              >
+                Add RSS Feed
+              </Button>
+            </AnimatedDiv>
+          </div>
+        )}
+      </form.Field>
+
       <form.AppForm>
         <form.SubscribeButton label="Save" className="mt-4 w-full" />
         {submitError && <p className="mt-4 text-red-500">{submitError}</p>}
+        {form.state.errors.length > 0 && (
+          <div className="mt-4 rounded-lg border border-red-300 bg-red-50 p-4">
+            <p className="mb-2 font-semibold text-red-800">Form Validation Errors:</p>
+            <ul className="list-inside list-disc text-sm text-red-700">
+              {form.state.errors.map((error, index) => (
+                <li key={index}>{JSON.stringify(error)}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </form.AppForm>
     </CenteredContainer>
   );

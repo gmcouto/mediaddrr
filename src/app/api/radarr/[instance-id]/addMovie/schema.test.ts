@@ -27,5 +27,6 @@ test('should handle optional tmdbId', () => {
   expect(result).toEqual({
     query: 'Test Movie',
     year: 2023,
+    tmdbId: undefined,
   });
 });

@@ -8,23 +8,21 @@ set -e
 
 # Get the user name for the given PUID
 USER_NAME=$(echo $(getent passwd "$PUID") | cut -d: -f1)
+export USER_NAME=${USER_NAME:-appuser}
 
-# Try to remove user if exists, skip if it fails (suppress output)
-deluser $USER_NAME >/dev/null 2>&1 || true
 
 # Get the group name for the given PGID
 GROUP_NAME=$(echo $(getent group $PGID) | cut -d: -f1)
-
-# Try to remove group if exists, skip if it fails (suppress output)
-(delgroup $GROUP_NAME >/dev/null 2>&1 || true)
+export GROUP_NAME=${GROUP_NAME:-appgroup}
 
 # Try to create group with desired GID, skip if it fails (group may already exist, suppress output)
 addgroup -g "$PGID" "appgroup" >/dev/null 2>&1 || true
 
 # Create user with specified UID and assign to group (suppress output)
-adduser -G appgroup -D -u $PUID appuser >/dev/null 2>&1 || true
+adduser -G "$GROUP_NAME" -D -u "$PUID" "$USER_NAME" >/dev/null 2>&1 || true
 
 # Set ownership
+mkdir -p /app/config
 chown -R "$PUID":"$PGID" /app/config
 chmod -R a+rwx /app/config
 
@@ -34,4 +32,4 @@ umask "$UMASK"
 # Run the application as appuser
 which su-exec || echo "su-exec not found!"
 
-exec su-exec appuser "$@" 
+exec su-exec "$USER_NAME":"$GROUP_NAME" "$@" 

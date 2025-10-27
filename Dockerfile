@@ -1,6 +1,7 @@
 # syntax=docker.io/docker/dockerfile:1
 
 FROM oven/bun:alpine AS base
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -13,32 +14,14 @@ COPY package.json bun.lock ./
 RUN bun i --frozen-lockfile
 
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-# Default build command
-# ENV NEXT_TELEMETRY_DISABLED=1
-# RUN bun run build --debug --no-lint
-
-
-
 # Production image, copy all the files and run next
 FROM base AS runner
 RUN apk add --no-cache su-exec
 WORKDIR /app
 
-ENV NODE_ENV=production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-ENV NEXT_TELEMETRY_DISABLED=1
-
-COPY --from=builder /app/public ./public
-
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=1000:1000 --chmod=a+rwx /app/.next/standalone ./
-COPY --from=builder --chown=1000:1000 --chmod=a+rwx /app/.next/static ./.next/static
+COPY --from=deps /app/node_modules ./node_modules
+COPY .next .next
+COPY public public
 COPY LICENSE ./LICENSE
 
 # Copy entrypoint script
@@ -54,4 +37,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["node", "server.js"]
+CMD ["bun", "run", "next", "start"]

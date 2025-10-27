@@ -4,6 +4,12 @@ import fs from 'fs';
 
 const logDirectory = './config/logs';
 
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'none';
+export let LOG_LEVEL: LogLevel = 'info';
+
+export const setLogLevel = (level: LogLevel) => {
+  LOG_LEVEL = level;
+};
 // Ensure log directory exists
 fs.mkdirSync(logDirectory, { recursive: true });
 
@@ -34,7 +40,24 @@ function format(level: string, message: string, err?: unknown) {
 }
 
 export const logger = {
-  info: (msg: string) => stream.write(format('info', msg)),
-  warn: (msg: string) => stream.write(format('warn', msg)),
-  error: (msg: string, err?: unknown) => stream.write(format('error', msg, err)),
+  debug: (msg: string) => {
+    if (LOG_LEVEL === 'none' || LOG_LEVEL === 'error' || LOG_LEVEL === 'warn' || LOG_LEVEL === 'info') return;
+    console.log(format('debug', msg));
+    return stream.write(format('debug', msg));
+  },
+  info: (msg: string) => {
+    if (LOG_LEVEL === 'none' || LOG_LEVEL === 'error' || LOG_LEVEL === 'warn') return;
+    console.log(format('info', msg));
+    return stream.write(format('info', msg));
+  },
+  warn: (msg: string) => {
+    if (LOG_LEVEL === 'none' || LOG_LEVEL === 'error') return;
+    console.log(format('warn', msg));
+    return stream.write(format('warn', msg));
+  },
+  error: (msg: string, err?: unknown) => {
+    if (LOG_LEVEL === 'none') return;
+    console.log(format('error', msg, err));
+    return stream.write(format('error', msg, err));
+  },
 };
