@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { CenteredContainer } from '~/components/containers/CenteredContainer';
+import { PageNavigation } from '~/components/containers/PageNavigation';
 import { Button } from '~/components/ui/Button';
 import { Input } from '~/components/ui/Input';
 import { Label } from '~/components/ui/Label';
@@ -71,13 +71,7 @@ export default function PatternTesterPage() {
 
   return (
     <CenteredContainer>
-      <div className="mb-4 flex justify-end">
-        <Link href="/settings">
-          <Button variant="outline" size="sm">
-            Settings
-          </Button>
-        </Link>
-      </div>
+      <PageNavigation currentPath="/patternTester" />
       <h1 className="mb-6 text-2xl font-bold">Pattern Tester</h1>
 
       <div className="space-y-4">

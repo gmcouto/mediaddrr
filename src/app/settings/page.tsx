@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { CenteredContainer } from '../../components/containers/CenteredContainer';
+import { PageNavigation } from '../../components/containers/PageNavigation';
 import { createFormHook, FormApi } from '@tanstack/react-form';
 import { Button } from '~/components/ui/Button';
 import { TextField } from './_components/TextField';
@@ -204,13 +204,7 @@ function SettingsFormContent() {
 
   return (
     <CenteredContainer>
-      <div className="mb-4 flex justify-end">
-        <Link href="/patternTester">
-          <Button variant="outline" size="sm">
-            Pattern Tester
-          </Button>
-        </Link>
-      </div>
+      <PageNavigation currentPath="/settings" />
       <h1 className="mb-6 text-2xl font-bold">Settings</h1>
       <div>
         <h3 className="text-2l mb-4 font-bold">TMDB</h3>
