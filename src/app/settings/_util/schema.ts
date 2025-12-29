@@ -106,6 +106,7 @@ export const PatternFormSchema = z.object({
   id: z.string().trim().nonempty('Pattern ID is required'),
   variables: z.array(VariableFormSchema),
   output: z.string().trim().nonempty('Output template is required'),
+  aliases: z.string().trim(),
 });
 export type PatternForm = z.infer<typeof PatternFormSchema>;
 
@@ -186,6 +187,12 @@ export function convertToSettings(form: SettingsForm): Settings {
             replaceWith: variable.replaceWith,
           })),
           output: pattern.output,
+          aliases: pattern.aliases
+            ? pattern.aliases
+                .split(',')
+                .map((alias) => alias.trim())
+                .filter((alias) => alias !== '')
+            : [],
         },
       ]),
     ),
@@ -230,6 +237,7 @@ export function convertToForm(settings: Settings): SettingsForm {
         replaceWith: variable.replaceWith,
       })),
       output: pattern.output,
+      aliases: (pattern.aliases || []).join(', '),
     })),
   };
 }

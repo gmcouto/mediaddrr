@@ -99,10 +99,12 @@ export const PatternSchema = z
   .object({
     variables: z.array(VariableSchema).catch([]).default([]),
     output: z.string().catch('').default(''),
+    aliases: z.array(z.string()).catch([]).default([]),
   })
   .catch({
     variables: [],
     output: '',
+    aliases: [],
   });
 export type Pattern = z.infer<typeof PatternSchema>;
 

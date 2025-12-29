@@ -7,7 +7,8 @@ mediaddrr is a web application designed to receive webhooks from [autobrr](https
 ## Features
 
 1. Adding NEW Movies into Radarr based on "Title + Year" query (as autobrr webhook), and some basic TMDB filters (Avg. Vote, Popularity, etc).
-2. Pre-processed RSS feeds with pattern-based text transformation (so trackers RSS feeds match YOUR desired patterns)
+2. Post releases into Radarr (offer for download) with release text transformation (so releases always match YOUR desired patterns).
+2. Pre-processed RSS feeds with pattern-based text transformation (No need to use this now that we have added the post release feature)
 3. A pattern-based text transformation UI and API (so you can test it before usage)
 
 ---
@@ -105,6 +106,7 @@ Patterns allow you to transform text using regex-based variable extraction and r
     - **Regex**: A regular expression pattern to match and extract data.
     - **Replace With**: The replacement pattern (use `$1`, `$2`, etc. for capture groups).
   - Set the **Output Template**: A template string using `${variableName}` syntax to format the final output.
+  - Set the **Aliases**: A comma-separated list of ignore case "indexer identifier" you use on autobrr with this pattern (for automated release pushing)
 
 - Example pattern structure:
   - Variables extract `year` and `title` from input text like `[2024] Movie Title [1080p]`.

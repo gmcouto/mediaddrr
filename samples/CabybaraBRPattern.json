@@ -1,4 +1,10 @@
 {
+  "aliases": [
+    "capybarabr-irc",
+    "capybarabr",
+    "capybara",
+    "cbr"
+  ],
   "variables": [
     {
       "name": "title",

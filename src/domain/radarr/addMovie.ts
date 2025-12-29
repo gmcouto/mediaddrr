@@ -48,6 +48,7 @@ export async function addMovie(
     logger.error(`Radarr response: ${JSON.stringify(response.body)}`);
     return NextResponse.json({ error: `Radarr response: ${JSON.stringify(response.body)}` }, { status: 500 });
   }
-  logger.info(`Radarr response: ${JSON.stringify(response.body)}`);
-  return response.body;
+  const data = await response.json();
+  logger.info(`Radarr response: ${JSON.stringify(data)}`);
+  return NextResponse.json(data);
 }

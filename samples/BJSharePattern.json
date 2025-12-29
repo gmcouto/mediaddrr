@@ -1,4 +1,10 @@
 {
+  "aliases": [
+    "bjshare-irc",
+    "bjshare",
+    "bjs",
+    "bj"
+  ],
   "variables": [
     {
       "name": "year",

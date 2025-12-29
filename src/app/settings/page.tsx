@@ -533,6 +533,14 @@ function SettingsFormContent() {
                   <form.AppField name={`patterns[${patternIndex}].output`}>
                     {(_) => <TextField label="Output Template" placeholder="Enter output template" />}
                   </form.AppField>
+                  <form.AppField name={`patterns[${patternIndex}].aliases`}>
+                    {(_) => (
+                      <TextField
+                        label="Aliases"
+                        placeholder="Enter comma-separated aliases (e.g., alias1, alias2, alias3)"
+                      />
+                    )}
+                  </form.AppField>
                   <div>
                     <form.Field name={`patterns[${patternIndex}].variables`}>
                       {(variablesField) => {
@@ -711,6 +719,7 @@ function SettingsFormContent() {
                     id: '',
                     variables: [],
                     output: '',
+                    aliases: '',
                   })
                 }
                 className={cn('mt-2 w-full border-none bg-green-950 text-white hover:bg-green-900')}

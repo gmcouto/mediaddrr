@@ -7,6 +7,7 @@ import { isValidTmdbId } from '~/domain/tmdb/isValidTmdbId';
 import { logger } from '~/logger';
 import type { TmdbMovieDetail } from '~/domain/tmdb/types';
 import { requestBodySchema } from './schema';
+import { postRelease } from '~/domain/radarr/postRelease';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ 'instance-id': string }> }) {
   const { 'instance-id': instanceId } = await params;
@@ -68,9 +69,40 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     logger.error(`Radarr instance not found: ${instanceId}`);
     return NextResponse.json({ error: `Radarr instance not found: ${instanceId}` }, { status: 404 });
   }
-  const response = await addMovie(radarrInstance, {
+  const addMovieResponse = await addMovie(radarrInstance, {
     tmdbId: tmdbMovie.id,
     title: tmdbMovie.title,
   });
-  return NextResponse.json(response);
+
+  if (data.release) {
+    logger.info(`Release has been detected for ${data.release.title}, attempting to push to radarr`);
+    try {
+      const postReleasePayload = {
+        title: data.release.title,
+        infoUrl: data.release.infoUrl,
+        downloadUrl: data.release.downloadUrl,
+        protocol: data.release.protocol,
+        publishDate: new Date().toISOString(),
+        indexer: data.release.indexer,
+        size: data.release.size,
+      };
+
+      const postReleaseResponse = await postRelease(radarrInstance, postReleasePayload);
+
+      if (addMovieResponse.ok) {
+        logger.info(`Successfully pushed release for "${data.release.title}" to Radarr for instance ${instanceId}`);
+        return postReleaseResponse;
+      } else {
+        logger.error(`Failed to push release to Radarr for ${data.release?.title ?? 'unknown'}: ${addMovieResponse.statusText}`);
+      }
+    } catch (error) {
+      logger.error(
+        `Failed to push release to Radarr for ${data.release?.title ?? 'unknown'}: ${
+          error instanceof Error ? error.message : JSON.stringify(error)
+        }`,
+      );
+      // fail gracefully because it could mean the release wont trump existing quality
+    }
+  }
+  return addMovieResponse;
 }
