@@ -523,7 +523,7 @@ function SettingsFormContent() {
       <form.Field name="patterns">
         {(patternsField) => (
           <div>
-            <h3 className="text-2l mb-4 pt-4 font-bold">Patterns</h3>
+            <h3 className="text-2l mb-4 pt-4 font-bold">Text Transformation Patterns</h3>
             <AnimatedDiv className="space-y-6">
               {(Array.isArray(patternsField.state.value) ? patternsField.state.value : []).map((pattern, patternIndex) => (
                 <div key={pattern.key} className="mb-4 flex flex-col gap-2 rounded-lg border p-4">
@@ -706,7 +706,7 @@ function SettingsFormContent() {
                     onClick={() => patternsField.removeValue(patternIndex)}
                     className={cn('mt-2 border-none bg-red-950 text-white hover:bg-red-900')}
                   >
-                    Remove Pattern
+                    Remove Text Transformation Pattern
                   </Button>
                 </div>
               ))}
@@ -724,7 +724,7 @@ function SettingsFormContent() {
                 }
                 className={cn('mt-2 w-full border-none bg-green-950 text-white hover:bg-green-900')}
               >
-                Add Pattern
+                Add Text Transformation Pattern
               </Button>
             </AnimatedDiv>
           </div>

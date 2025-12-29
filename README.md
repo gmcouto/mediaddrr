@@ -4,12 +4,13 @@
 
 mediaddrr is a web application designed to receive webhooks from [autobrr](https://autobrr.com/) and add the requested media to your other `arr` app instances. Currently, it supports adding **movies** to [Radarr](https://radarr.video/).
 
-## Features
+## Main Features
 
-1. Adding NEW Movies into Radarr based on "Title + Year" query (as autobrr webhook), and some basic TMDB filters (Avg. Vote, Popularity, etc).
-2. Post releases into Radarr (offer for download) with release text transformation (so releases always match YOUR desired patterns).
-2. Pre-processed RSS feeds with pattern-based text transformation (No need to use this now that we have added the post release feature)
-3. A pattern-based text transformation UI and API (so you can test it before usage)
+1. Add NEW Movies into Radarr based on "Title + Year" query (as autobrr webhook).
+2. Filter which new movies can be added using some TMDB query filters, like vote average, minimum votes, and popularity (Avoid adding awful releases)
+3. Push release to Radarr with text-transformation (So releases will follow YOUR desired pattern)
+
+It also allows you making mediaddr an RSS-server proxy with text-transformation, but I think it will be deprecated, as pushing the release with text-transformation will work with any kind of feed. 
 
 ---
 
@@ -75,27 +76,29 @@ Add a webhook in autobrr with the following settings:
 
 - **Body:**
   ```json
-  {
+{
     "query": "{{.Title}}",
-    "year": {{.Year}}
-  }
+    "year": "{{.Year}}",
+    "release": {
+        "title": "{{.TorrentName}}",
+        "infoUrl": "{{.InfoUrl}}",
+        "downloadUrl": "{{.DownloadUrl}}",
+        "size": "{{.Size}}",
+        "indexer": "{{.IndexerIdentifierExternal}}",
+        "downloadProtocol": "{{.Protocol}}",
+        "protocol": "{{.Protocol}}"
+    }
+}
   ```
 You can also add `"tmdbId": {{ .Tags }}` if some of your trackers support tmdbId on the parsing. The API supports both query-based search (`query` + `year`) and direct TMDB ID lookup (`tmdbId`).
-
-> **Important:**
-> When configuring your actions in autobrr, **ensure that the Radarr action runs _after_ the mediaddrr action**. This is required for proper operation. If you disable or remove the Radarr action, movies will not be downloaded by your Radarr instance. See the example below:
->
-> ![Correct autobrr action order](docs/autobrr_2.png)
->
-> If your radarr instance has a big delay to download movies, you may also add an additional third action to force the movie download directly to your torrent client, just make sure to set the correct category/folder so radarr can understand the movie is being downloaded.
 
 ---
 
 ## Additional Features
 
-### Patterns
+### Text Transformation Patterns
 
-Patterns allow you to transform text using regex-based variable extraction and replacement. This is useful for processing RSS feed tags or sanitizing text. This can be used in autobrr for sanitizing IRC releases, for example.
+Text Transformation Patterns allow you to transform text using regex-based variable extraction and replacement. This is useful for indexers that does not follow a good standard for their release names, or, in such cases that they do not follow your very detailed custom formats.
 
 - For each pattern you want to create:
 
@@ -106,7 +109,7 @@ Patterns allow you to transform text using regex-based variable extraction and r
     - **Regex**: A regular expression pattern to match and extract data.
     - **Replace With**: The replacement pattern (use `$1`, `$2`, etc. for capture groups).
   - Set the **Output Template**: A template string using `${variableName}` syntax to format the final output.
-  - Set the **Aliases**: A comma-separated list of ignore case "indexer identifier" you use on autobrr with this pattern (for automated release pushing)
+  - Set the **Aliases**: A comma-separated list of ignore case "indexer identifier" you use on autobrr with this pattern, used for automated release pushing.
 
 - Example pattern structure:
   - Variables extract `year` and `title` from input text like `[2024] Movie Title [1080p]`.
@@ -116,23 +119,8 @@ Patterns allow you to transform text using regex-based variable extraction and r
 
 See the Sanitize API Endpoint section below for further information.
 
-### RSS Feeds
-
-RSS feeds can be processed and transformed using patterns before being served to clients.
-
-- For each RSS feed you want to configure:
-
-  - Enter a unique **RSS Feed Identifier** (e.g., `tracker-rss`).
-  - Set the **RSS Feed URL** (the source RSS feed to process).
-  - Configure **Tag Mappings**: Map XML tag names (e.g., `title`, `description`) to pattern identifiers that will transform those tags.
-
-- Access the processed RSS feed at:
-  ```
-  http://mediaddrr:3000/api/rss/[rss-id]
-  ```
-  Replace `[rss-id]` with your RSS feed identifier.
-
-- The processed feed will have all mapped tags transformed according to their assigned patterns.
+> **Important:**
+> Any release that will be pushed through radarr using mediaddrr will use the external indexer identifier to match on which pattern must be executed. If a corresponding alias is found in the patterns, it will execute on the release string before forwarding to Radarr. This is what allows text-transformation to be executed with any type of feed.
 
 ### Pattern Tester
 
@@ -165,14 +153,23 @@ your text here
 
 Both methods return the transformed text as plain text. The pattern ID must match one of your configured patterns.
 
-### RSS Feed Processing
+### RSS Feeds
 
-RSS feeds configured in settings can be accessed at `/api/rss/[rss-id]`. The feed will be fetched from the configured URL, and all mapped tags will be transformed using their assigned patterns before being returned to the client.
+RSS feeds can be processed and transformed using patterns before being served to clients.
 
-This is useful for:
-- Normalizing tracker RSS feed formats
-- Cleaning up or reformatting titles and descriptions
-- Adding metadata or transforming content before consumption by other applications
+- For each RSS feed you want to configure:
+
+  - Enter a unique **RSS Feed Identifier** (e.g., `tracker-rss`).
+  - Set the **RSS Feed URL** (the source RSS feed to process).
+  - Configure **Tag Mappings**: Map XML tag names (e.g., `title`, `description`) to pattern identifiers that will transform those tags.
+
+- Access the processed RSS feed at:
+  ```
+  http://mediaddrr:3000/api/rss/[rss-id]
+  ```
+  Replace `[rss-id]` with your RSS feed identifier.
+
+- The processed feed will have all mapped tags transformed according to their assigned patterns.
 
 ---
 

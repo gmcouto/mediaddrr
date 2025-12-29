@@ -1,0 +1,9 @@
+{
+    "title": "{{.TorrentName}}",
+    "infoUrl": "{{.InfoUrl}}",
+    "downloadUrl": "{{.DownloadUrl}}",
+    "size": "{{.Size}}",
+    "indexer": "{{.IndexerIdentifierExternal}}",
+    "downloadProtocol": "{{.Protocol}}",
+    "protocol": "{{.Protocol}}"
+}
