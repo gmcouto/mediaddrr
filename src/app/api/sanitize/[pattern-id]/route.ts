@@ -9,7 +9,7 @@ import { logger } from '~/logger';
  * Accepts input via query parameter (?input=...) or request body (plain text).
  * Returns the processed output as plain text.
  */
-export async function GET(request: NextRequest, { params }: { params: { 'pattern-id': string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ 'pattern-id': string }> }) {
   try {
     const patternId = (await params)['pattern-id'];
     if (!patternId) {
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest, { params }: { params: { 'pattern
  * POST handler for sanitize endpoint.
  * Accepts input as plain text in the request body.
  */
-export async function POST(request: NextRequest, { params }: { params: { 'pattern-id': string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ 'pattern-id': string }> }) {
   try {
     const patternId = (await params)['pattern-id'];
     if (!patternId) {
