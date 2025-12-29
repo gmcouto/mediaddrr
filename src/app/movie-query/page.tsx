@@ -209,8 +209,8 @@ export default function MovieQueryPage() {
                       className={cn(
                         'rounded border p-2',
                         searchMutation.data.filterChecks.minimumVoteAverage.passed
-                          ? 'border-green-200 bg-green-50/50'
-                          : 'border-red-200 bg-red-50/50',
+                          ? 'border-green-300 bg-green-50'
+                          : 'border-red-300 bg-red-50',
                       )}
                     >
                       <div className="flex items-center gap-2">
@@ -235,8 +235,8 @@ export default function MovieQueryPage() {
                       className={cn(
                         'rounded border p-2',
                         searchMutation.data.filterChecks.minimumPopularity.passed
-                          ? 'border-green-200 bg-green-50/50'
-                          : 'border-red-200 bg-red-50/50',
+                          ? 'border-green-300 bg-green-50'
+                          : 'border-red-300 bg-red-50',
                       )}
                     >
                       <div className="flex items-center gap-2">
@@ -261,8 +261,8 @@ export default function MovieQueryPage() {
                       className={cn(
                         'rounded border p-2',
                         searchMutation.data.filterChecks.minimumVoteCount.passed
-                          ? 'border-green-200 bg-green-50/50'
-                          : 'border-red-200 bg-red-50/50',
+                          ? 'border-green-300 bg-green-50'
+                          : 'border-red-300 bg-red-50',
                       )}
                     >
                       <div className="flex items-center gap-2">
