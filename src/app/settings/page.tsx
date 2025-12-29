@@ -7,6 +7,7 @@ import { createFormHook, FormApi } from '@tanstack/react-form';
 import { Button } from '~/components/ui/Button';
 import { TextField } from './_components/TextField';
 import { SubscribeButton } from './_components/SubscribeButton';
+import { ToggleNumberField } from './_components/ToggleNumberField';
 import {
   convertQualityProfilesToSelectItems,
   convertRootFoldersToSelectItems,
@@ -59,7 +60,7 @@ const getRootFoldersOptions = async (radarrInstance: { baseUrl: string; apiKey: 
 const { useAppForm } = createFormHook({
   fieldContext,
   formContext,
-  fieldComponents: { TextField, SensitiveTextField },
+  fieldComponents: { TextField, SensitiveTextField, ToggleNumberField },
   formComponents: { SubscribeButton },
 });
 
@@ -155,6 +156,9 @@ function SettingsFormContent() {
   const DEFAULT_FORM: SettingsForm = {
     tmdbConfig: {
       token: '',
+      minimumVoteAverage: null,
+      minimumVoteCount: null,
+      minimumPopularity: null,
     },
     radarrInstances: [],
     rssFeeds: [],
@@ -219,6 +223,38 @@ function SettingsFormContent() {
               toggleShowLabel="Show"
               hidePasswordMessage="Hide Token"
               showPasswordMessage="Show Token"
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="tmdbConfig.minimumVoteAverage">
+          {(_) => (
+            <ToggleNumberField
+              label="Minimum Vote Average"
+              placeholder="Enter minimum vote average"
+              toggleLabel="Enable minimum vote average filter"
+              step="0.01"
+              defaultValue="5.50"
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="tmdbConfig.minimumVoteCount">
+          {(_) => (
+            <ToggleNumberField
+              label="Minimum Vote Count"
+              placeholder="Enter minimum vote count"
+              toggleLabel="Enable minimum vote count filter"
+              defaultValue="100"
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="tmdbConfig.minimumPopularity">
+          {(_) => (
+            <ToggleNumberField
+              label="Minimum Popularity"
+              placeholder="Enter minimum popularity"
+              toggleLabel="Enable minimum popularity filter"
+              step="0.01"
+              defaultValue="250.5"
             />
           )}
         </form.AppField>

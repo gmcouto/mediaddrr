@@ -2,6 +2,9 @@ import { z } from 'zod';
 
 const defaultTmdbConfig = {
   token: '',
+  minimumVoteAverage: null,
+  minimumVoteCount: null,
+  minimumPopularity: null,
 };
 const defaultRadarrConfig = {
   baseUrl: '',
@@ -37,6 +40,21 @@ const defaultSettings = {
 export const TmdbConfigSchema = z
   .object({
     token: z.string().catch('').default(''),
+    minimumVoteAverage: z
+      .union([z.number(), z.null(), z.undefined()])
+      .catch(null)
+      .default(null)
+      .optional(),
+    minimumVoteCount: z
+      .union([z.number(), z.null(), z.undefined()])
+      .catch(null)
+      .default(null)
+      .optional(),
+    minimumPopularity: z
+      .union([z.number(), z.null(), z.undefined()])
+      .catch(null)
+      .default(null)
+      .optional(),
   })
   .catch(defaultTmdbConfig);
 export type TmdbConfig = z.infer<typeof TmdbConfigSchema>;

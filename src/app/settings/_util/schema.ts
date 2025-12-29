@@ -6,6 +6,55 @@ import type { RadarrRootFolderResponse } from '~/domain/radarr/getRootFolders';
 
 export const TmdbConfigFormSchema = z.object({
   token: z.string().trim().nonempty('Token is required'),
+  minimumVoteAverage: z
+    .union([
+      z
+        .string()
+        .refine((val) => val === '' || !isNaN(Number(val)), {
+          message: 'Must be a valid number',
+        })
+        .refine((val) => {
+          if (val === '') return true;
+          const num = Number(val);
+          if (isNaN(num)) return true; // Already handled by previous refine
+          const decimalPlaces = (val.split('.')[1] || '').length;
+          return decimalPlaces <= 2;
+        }, {
+          message: 'Must have at most 2 decimal places',
+        }),
+      z.null(),
+      z.undefined(),
+    ])
+    .optional(),
+  minimumVoteCount: z
+    .union([
+      z.string().refine((val) => val === '' || !isNaN(Number(val)), {
+        message: 'Must be a valid number',
+      }),
+      z.null(),
+      z.undefined(),
+    ])
+    .optional(),
+  minimumPopularity: z
+    .union([
+      z
+        .string()
+        .refine((val) => val === '' || !isNaN(Number(val)), {
+          message: 'Must be a valid number',
+        })
+        .refine((val) => {
+          if (val === '') return true;
+          const num = Number(val);
+          if (isNaN(num)) return true; // Already handled by previous refine
+          const decimalPlaces = (val.split('.')[1] || '').length;
+          return decimalPlaces <= 2;
+        }, {
+          message: 'Must have at most 2 decimal places',
+        }),
+      z.null(),
+      z.undefined(),
+    ])
+    .optional(),
 });
 export type TmdbConfig = z.infer<typeof TmdbConfigFormSchema>;
 
@@ -84,7 +133,27 @@ export type SettingsForm = z.infer<typeof SettingsFormSchema>;
 
 export function convertToSettings(form: SettingsForm): Settings {
   return {
-    tmdbConfig: form.tmdbConfig,
+    tmdbConfig: {
+      token: form.tmdbConfig.token,
+      minimumVoteAverage:
+        form.tmdbConfig.minimumVoteAverage &&
+        typeof form.tmdbConfig.minimumVoteAverage === 'string' &&
+        form.tmdbConfig.minimumVoteAverage.trim() !== ''
+          ? Number(form.tmdbConfig.minimumVoteAverage)
+          : null,
+      minimumVoteCount:
+        form.tmdbConfig.minimumVoteCount &&
+        typeof form.tmdbConfig.minimumVoteCount === 'string' &&
+        form.tmdbConfig.minimumVoteCount.trim() !== ''
+          ? Number(form.tmdbConfig.minimumVoteCount)
+          : null,
+      minimumPopularity:
+        form.tmdbConfig.minimumPopularity &&
+        typeof form.tmdbConfig.minimumPopularity === 'string' &&
+        form.tmdbConfig.minimumPopularity.trim() !== ''
+          ? Number(form.tmdbConfig.minimumPopularity)
+          : null,
+    },
     radarrInstances: Object.fromEntries(
       form.radarrInstances.map((instance) => [
         instance.id,
@@ -125,7 +194,12 @@ export function convertToSettings(form: SettingsForm): Settings {
 
 export function convertToForm(settings: Settings): SettingsForm {
   return {
-    tmdbConfig: settings.tmdbConfig,
+    tmdbConfig: {
+      token: settings.tmdbConfig.token,
+      minimumVoteAverage: settings.tmdbConfig.minimumVoteAverage?.toString() ?? null,
+      minimumVoteCount: settings.tmdbConfig.minimumVoteCount?.toString() ?? null,
+      minimumPopularity: settings.tmdbConfig.minimumPopularity?.toString() ?? null,
+    },
     radarrInstances: Object.entries(settings.radarrInstances).map(([id, instance]) => ({
       key: UUID(),
       id,
