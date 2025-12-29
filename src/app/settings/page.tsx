@@ -248,7 +248,7 @@ function SettingsFormContent() {
               placeholder="Enter minimum popularity"
               toggleLabel="Enable minimum popularity filter"
               step="0.01"
-              defaultValue="250.5"
+              defaultValue="4.21"
             />
           )}
         </form.AppField>
