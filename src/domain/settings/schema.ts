@@ -23,7 +23,7 @@ const defaultProcessor = {
 };
 const defaultRssFeed = {
   url: '',
-  processors: [],
+  tags: {},
 };
 const defaultSettings = {
   tmdbConfig: defaultTmdbConfig,
@@ -31,6 +31,7 @@ const defaultSettings = {
     example: defaultRadarrConfig,
   },
   rssFeeds: {},
+  patterns: {},
 };
 
 export const TmdbConfigSchema = z
@@ -76,12 +77,29 @@ export const ProcessorSchema = z
   .catch(defaultProcessor);
 export type Processor = z.infer<typeof ProcessorSchema>;
 
+export const PatternSchema = z
+  .object({
+    variables: z.array(VariableSchema).catch([]).default([]),
+    output: z.string().catch('').default(''),
+  })
+  .catch({
+    variables: [],
+    output: '',
+  });
+export type Pattern = z.infer<typeof PatternSchema>;
+
 export const RssFeedSchema = z
   .object({
     url: z.string().catch('').default(''),
-    processors: z.array(ProcessorSchema).catch([]).default([]),
+    tags: z
+      .record(z.string(), z.string())
+      .catch({} as Record<string, string>)
+      .default({}),
   })
-  .catch(defaultRssFeed);
+  .catch({
+    url: '',
+    tags: {},
+  });
 export type RssFeed = z.infer<typeof RssFeedSchema>;
 
 export const SettingsSchema = z
@@ -94,6 +112,10 @@ export const SettingsSchema = z
     rssFeeds: z
       .record(z.string(), RssFeedSchema)
       .catch({} as Record<string, z.infer<typeof RssFeedSchema>>)
+      .default({}),
+    patterns: z
+      .record(z.string(), PatternSchema)
+      .catch({} as Record<string, z.infer<typeof PatternSchema>>)
       .default({}),
   })
   .catch(defaultSettings);

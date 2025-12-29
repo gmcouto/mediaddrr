@@ -1,4 +1,4 @@
-import type { Processor } from '../settings/schema';
+import type { Pattern } from '../settings/schema';
 import { logger } from '~/logger';
 
 /**
@@ -25,11 +25,11 @@ export const extractTags = async (xml: string, tag: string): Promise<string[]> =
   return matches;
 };
 
-export const processVariables = async (entry: string, processor: Processor) => {
+export const processVariables = async (entry: string, pattern: Pattern) => {
   const outputVariables: Record<string, string> = {};
-  const firstVariable = processor.variables[0];
+  const firstVariable = pattern.variables[0];
   if (!firstVariable) {
-    logger.warn('No variables found in processor');
+    logger.warn('No variables found in pattern');
     return null;
   }
   const regex = new RegExp(firstVariable.regex);
@@ -37,7 +37,7 @@ export const processVariables = async (entry: string, processor: Processor) => {
     logger.debug(`First variable ${firstVariable.name} not found in source ${entry}`);
     return null;
   }
-  for (const variable of processor.variables) {
+  for (const variable of pattern.variables) {
     const source = variable.from ? (outputVariables[variable.from] ?? entry) : entry;
     const regex = new RegExp(variable.regex);
     outputVariables[variable.name] = source.replace(regex, variable.replaceWith).trim();
@@ -56,25 +56,34 @@ export const processOutput = async (output: string, outputVariables: Record<stri
   return output;
 };
 
-export const processTag = async (xml: string, processor: Processor) => {
-  const tags = await extractTags(xml, processor.tag);
+export const processTag = async (xml: string, tag: string, pattern: Pattern) => {
+  const tags = await extractTags(xml, tag);
   let xmlOutput = xml;
-  for (const tag of tags) {
-    const variables = await processVariables(tag, processor);
+  for (const tagContent of tags) {
+    const variables = await processVariables(tagContent, pattern);
     if (!variables) continue;
-    const output = await processOutput(processor.output, variables);
+    const output = await processOutput(pattern.output, variables);
     xmlOutput = xmlOutput.replace(
-      `<${processor.tag}>${tag}</${processor.tag}>`,
-      `<${processor.tag}>${output}</${processor.tag}>`,
+      `<${tag}>${tagContent}</${tag}>`,
+      `<${tag}>${output}</${tag}>`,
     );
   }
   return xmlOutput;
 };
 
-export const processXml = async (xml: string, processors: Processor[]) => {
+export const processXml = async (
+  xml: string,
+  tags: Record<string, string>,
+  patterns: Record<string, Pattern>,
+) => {
   let xmlOutput = xml;
-  for (const processor of processors) {
-    xmlOutput = await processTag(xmlOutput, processor);
+  for (const [tagName, patternId] of Object.entries(tags)) {
+    const pattern = patterns[patternId];
+    if (!pattern) {
+      logger.warn(`Pattern ${patternId} not found for tag ${tagName}`);
+      continue;
+    }
+    xmlOutput = await processTag(xmlOutput, tagName, pattern);
   }
   return xmlOutput;
 };

@@ -22,14 +22,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!rssFeed.url) {
       return NextResponse.json({ error: 'RSS feed URL not configured' }, { status: 500 });
     }
-    if (!rssFeed.processors) {
-      return NextResponse.json({ error: 'RSS feed processors not configured' }, { status: 500 });
+    if (!rssFeed.tags || Object.keys(rssFeed.tags).length === 0) {
+      return NextResponse.json({ error: 'RSS feed tags not configured' }, { status: 500 });
     }
-    if (!rssFeed.processors.length) {
-      return NextResponse.json({ error: 'RSS feed processors not configured' }, { status: 500 });
+    if (!settings.patterns) {
+      return NextResponse.json({ error: 'Patterns not configured' }, { status: 500 });
     }
     const { content, headers } = await loadRssFeed(rssId, rssFeed.url, Object.fromEntries(request.headers.entries()));
-    const processedContent = await processXml(content, rssFeed.processors);
+    const processedContent = await processXml(content, rssFeed.tags, settings.patterns);
     return new Response(processedContent, { headers });
   } catch (error: unknown) {
     logger.error('Error generating feed', error);

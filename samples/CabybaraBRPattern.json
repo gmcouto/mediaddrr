@@ -1,0 +1,29 @@
+{
+  "variables": [
+    {
+      "name": "title",
+      "from": null,
+      "regex": "(.*)",
+      "replaceWith": "$1"
+    },
+    {
+      "name": "brazilian",
+      "from": null,
+      "regex": ".*?(?:\\b(DUAL|MULTI|Dublado|Nacional|Brazilian|Portuguese)\\b|$)",
+      "replaceWith": "$1"
+    },
+    {
+      "name": "brazilian",
+      "from": "brazilian",
+      "regex": "(?:\\b(DUAL|MULTI|Dublado|Nacional|Brazilian|Portuguese)\\b|^).*",
+      "replaceWith": "$1"
+    },
+    {
+      "name": "brazilian",
+      "from": "brazilian",
+      "regex": "^(.+)$",
+      "replaceWith": "$1 Original Brazilian"
+    }
+  ],
+  "output": "${title} / ${brazilian}"
+}

@@ -52,11 +52,25 @@ export const ProcessorFormSchema = z.object({
 });
 export type ProcessorForm = z.infer<typeof ProcessorFormSchema>;
 
+export const PatternFormSchema = z.object({
+  key: UNIQUE_ID_TYPE(),
+  id: z.string().trim().nonempty('Pattern ID is required'),
+  variables: z.array(VariableFormSchema),
+  output: z.string().trim().nonempty('Output template is required'),
+});
+export type PatternForm = z.infer<typeof PatternFormSchema>;
+
 export const RssFeedFormSchema = z.object({
   key: UNIQUE_ID_TYPE(),
   id: z.string().trim().nonempty('Feed ID is required'),
   url: z.string().trim().nonempty('URL is required'),
-  processors: z.array(ProcessorFormSchema),
+  tags: z.array(
+    z.object({
+      key: UNIQUE_ID_TYPE(),
+      tagName: z.string().trim().nonempty('Tag name is required'),
+      patternId: z.string().trim().nonempty('Pattern is required'),
+    }),
+  ),
 });
 export type RssFeedForm = z.infer<typeof RssFeedFormSchema>;
 
@@ -64,6 +78,7 @@ export const SettingsFormSchema = z.object({
   tmdbConfig: TmdbConfigFormSchema,
   radarrInstances: z.array(RadarrConfigFormSchema),
   rssFeeds: z.array(RssFeedFormSchema),
+  patterns: z.array(PatternFormSchema),
 });
 export type SettingsForm = z.infer<typeof SettingsFormSchema>;
 
@@ -87,16 +102,21 @@ export function convertToSettings(form: SettingsForm): Settings {
         feed.id,
         {
           url: feed.url,
-          processors: feed.processors.map((processor) => ({
-            tag: processor.tag,
-            variables: processor.variables.map((variable) => ({
-              name: variable.name,
-              from: variable.from === '' || variable.from === undefined ? null : variable.from,
-              regex: variable.regex,
-              replaceWith: variable.replaceWith,
-            })),
-            output: processor.output,
+          tags: Object.fromEntries(feed.tags.map((tag) => [tag.tagName, tag.patternId])),
+        },
+      ]),
+    ),
+    patterns: Object.fromEntries(
+      form.patterns.map((pattern) => [
+        pattern.id,
+        {
+          variables: pattern.variables.map((variable) => ({
+            name: variable.name,
+            from: variable.from === '' || variable.from === undefined ? null : variable.from,
+            regex: variable.regex,
+            replaceWith: variable.replaceWith,
           })),
+          output: pattern.output,
         },
       ]),
     ),
@@ -119,18 +139,23 @@ export function convertToForm(settings: Settings): SettingsForm {
       key: UUID(),
       id,
       url: feed.url,
-      processors: feed.processors.map((processor) => ({
+      tags: Object.entries(feed.tags || {}).map(([tagName, patternId]) => ({
         key: UUID(),
-        tag: processor.tag,
-        variables: processor.variables.map((variable) => ({
-          key: UUID(),
-          name: variable.name,
-          from: variable.from ?? '',
-          regex: variable.regex,
-          replaceWith: variable.replaceWith,
-        })),
-        output: processor.output,
+        tagName,
+        patternId,
       })),
+    })),
+    patterns: Object.entries(settings.patterns || {}).map(([id, pattern]) => ({
+      key: UUID(),
+      id,
+      variables: pattern.variables.map((variable) => ({
+        key: UUID(),
+        name: variable.name,
+        from: variable.from ?? '',
+        regex: variable.regex,
+        replaceWith: variable.replaceWith,
+      })),
+      output: pattern.output,
     })),
   };
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { CenteredContainer } from '../../components/containers/CenteredContainer';
 import { createFormHook, FormApi } from '@tanstack/react-form';
 import { Button } from '~/components/ui/Button';
@@ -23,11 +23,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SettingsSchema } from '../../domain/settings/schema';
 import type { RadarrQualityProfileResponse } from '~/domain/radarr/getQualityProfiles';
 import { TextOrSelectField } from './_components/TextOrSelectField';
+import { SelectField } from './_components/SelectField';
 import type { RadarrTagResponse } from '~/domain/radarr/getTags';
 import type { RadarrRootFolderResponse } from '~/domain/radarr/getRootFolders';
 import { fieldContext, formContext } from './_util/form';
 import { AnimatedDiv } from '~/components/containers/AnimatedDiv';
 import z from 'zod';
+import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 
 const getQualityProfilesOptions = async (radarrInstance: { baseUrl: string; apiKey: string }) => {
   const qualityProfiles = await fetch(`/api/radarr/getQualityProfiles`, {
@@ -66,6 +68,8 @@ function SettingsFormContent() {
   const [qualityProfilesOptions, setQualityProfilesOptions] = useState<MapOfSelectOptions>({});
   const [tagsOptions, setTagsOptions] = useState<MapOfSelectOptions>({});
   const [rootFoldersOptions, setRootFoldersOptions] = useState<MapOfSelectOptions>({});
+  const [expandedTagsFeeds, setExpandedTagsFeeds] = useState<Set<number>>(new Set());
+  const [expandedVariablesPatterns, setExpandedVariablesPatterns] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
   const {
     data: settingsData,
@@ -153,6 +157,7 @@ function SettingsFormContent() {
     },
     radarrInstances: [],
     rssFeeds: [],
+    patterns: [],
   };
 
   const form = useAppForm({
@@ -165,6 +170,14 @@ function SettingsFormContent() {
       saveMutation.mutate(values.value);
     },
   });
+
+  // Expand all tags sections by default when form data is loaded
+  useEffect(() => {
+    if (form.state.values.rssFeeds) {
+      const allFeedIndices = new Set(form.state.values.rssFeeds.map((_, index) => index));
+      setExpandedTagsFeeds(allFeedIndices);
+    }
+  }, [form.state.values.rssFeeds]);
 
   if (isLoading) {
     return <SettingsLoading />;
@@ -323,7 +336,7 @@ function SettingsFormContent() {
             <h3 className="text-2l mb-4 pt-4 font-bold">RSS Feeds</h3>
             <AnimatedDiv className="space-y-6">
               {rssFeedsField.state.value.map((feed, feedIndex) => (
-                <div key={feedIndex} className="mb-4 flex flex-col gap-2 rounded-lg border p-4">
+                <div key={feed.key} className="mb-4 flex flex-col gap-2 rounded-lg border p-4">
                   <form.AppField name={`rssFeeds[${feedIndex}].id`}>
                     {(_) => <TextField label="Feed Identifier" placeholder="Enter a name for this RSS feed" />}
                   </form.AppField>
@@ -340,166 +353,97 @@ function SettingsFormContent() {
                     )}
                   </form.AppField>
                   <div>
-                    <label className="mb-2 block font-medium">Tag Processors</label>
-                    <form.Field name={`rssFeeds[${feedIndex}].processors`}>
-                      {(processorsField) => (
-                        <AnimatedDiv className="space-y-4">
-                          {processorsField.state.value.map((processor, processorIndex) => (
-                            <div key={processorIndex} className="rounded-lg border p-4">
-                              <form.AppField name={`rssFeeds[${feedIndex}].processors[${processorIndex}].tag`}>
-                                {(_) => <TextField label="Tag Name" placeholder="Enter XML tag name" />}
-                              </form.AppField>
-                              <form.AppField name={`rssFeeds[${feedIndex}].processors[${processorIndex}].output`}>
-                                {(_) => <TextField label="Output Template" placeholder="Enter output template" />}
-                              </form.AppField>
-                              <div>
-                                <label className="mb-2 block font-medium">Variables</label>
-                                <form.Field name={`rssFeeds[${feedIndex}].processors[${processorIndex}].variables`}>
-                                  {(variablesField) => (
-                                    <AnimatedDiv className="space-y-3">
-                                      {variablesField.state.value.map((variable, variableIndex) => (
-                                        <div
-                                          key={variable.key /* must use key for reorder */}
-                                          className="rounded border p-3"
-                                        >
-                                          <form.AppField
-                                            name={`rssFeeds[${feedIndex}].processors[${processorIndex}].variables[${variableIndex}].name`}
-                                          >
-                                            {(_) => (
-                                              <TextField
-                                                label="Variable Name"
-                                                placeholder="Enter variable name to persist to"
-                                              />
-                                            )}
-                                          </form.AppField>
-                                          <form.AppField
-                                            name={`rssFeeds[${feedIndex}].processors[${processorIndex}].variables[${variableIndex}].from`}
-                                          >
-                                            {(_) => (
-                                              <TextField
-                                                label="Base Var"
-                                                placeholder="Enter source variable name or leave empty to use source text"
-                                              />
-                                            )}
-                                          </form.AppField>
-                                          <form.AppField
-                                            name={`rssFeeds[${feedIndex}].processors[${processorIndex}].variables[${variableIndex}].regex`}
-                                          >
-                                            {(_) => (
-                                              <TextField label="Regex Pattern" placeholder="Enter regex pattern" />
-                                            )}
-                                          </form.AppField>
-                                          <form.AppField
-                                            name={`rssFeeds[${feedIndex}].processors[${processorIndex}].variables[${variableIndex}].replaceWith`}
-                                          >
-                                            {(_) => (
-                                              <TextField label="Replace With" placeholder="Enter replacement string" />
-                                            )}
-                                          </form.AppField>
-                                          <div className="mt-2 flex gap-2">
-                                            {variableIndex > 0 && (
-                                              <Button
-                                                type="button"
-                                                variant="default"
-                                                onClick={() => {
-                                                  const current = variablesField.state.value[variableIndex];
-                                                  const previous = variablesField.state.value[variableIndex - 1];
-                                                  if (!current || !previous) return;
-                                                  variablesField.setValue((prev) => {
-                                                    const newValue = [...prev];
-                                                    newValue[variableIndex - 1] = current;
-                                                    newValue[variableIndex] = previous;
-                                                    return newValue;
-                                                  });
-                                                }}
-                                                className={cn(
-                                                  'flex-1 border-none bg-blue-950 text-white hover:bg-blue-900',
-                                                )}
-                                              >
-                                                Move Up
-                                              </Button>
-                                            )}
-                                            {variableIndex < variablesField.state.value.length - 1 && (
-                                              <Button
-                                                type="button"
-                                                variant="default"
-                                                onClick={() => {
-                                                  const current = variablesField.state.value[variableIndex];
-                                                  const next = variablesField.state.value[variableIndex + 1];
-                                                  if (!current || !next) return;
-                                                  variablesField.setValue((prev) => {
-                                                    const newValue = [...prev];
-                                                    newValue[variableIndex] = next;
-                                                    newValue[variableIndex + 1] = current;
-                                                    return newValue;
-                                                  });
-                                                }}
-                                                className={cn(
-                                                  'flex-1 border-none bg-blue-950 text-white hover:bg-blue-900',
-                                                )}
-                                              >
-                                                Move Down
-                                              </Button>
-                                            )}
-                                            <Button
-                                              type="button"
-                                              variant="default"
-                                              onClick={() => variablesField.removeValue(variableIndex)}
-                                              className={cn(
-                                                'flex-1 border-none bg-red-950 text-white hover:bg-red-900',
-                                              )}
-                                            >
-                                              Remove Variable
-                                            </Button>
-                                          </div>
-                                        </div>
-                                      ))}
-                                      <Button
-                                        type="button"
-                                        variant="default"
-                                        onClick={() =>
-                                          variablesField.pushValue({
-                                            key: crypto.randomUUID(),
-                                            name: '',
-                                            from: '',
-                                            regex: '',
-                                            replaceWith: '',
-                                          })
-                                        }
-                                        className={cn('border-none bg-green-950 text-white hover:bg-green-900')}
-                                      >
-                                        Add Variable
-                                      </Button>
-                                    </AnimatedDiv>
-                                  )}
-                                </form.Field>
-                              </div>
+                    <form.Field name={`rssFeeds[${feedIndex}].tags`}>
+                      {(tagsField) => {
+                        const isExpanded = expandedTagsFeeds.has(feedIndex);
+                        const tagCount = tagsField.state.value.length;
+                        return (
+                          <>
+                            <div className="mb-2 flex items-center justify-between">
+                              <label className="block font-medium">
+                                Tags {tagCount > 0 && <span className="text-muted-foreground">({tagCount})</span>}
+                              </label>
                               <Button
                                 type="button"
-                                variant="default"
-                                onClick={() => processorsField.removeValue(processorIndex)}
-                                className={cn('mt-2 border-none bg-red-950 text-white hover:bg-red-900')}
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setExpandedTagsFeeds((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(feedIndex)) {
+                                      next.delete(feedIndex);
+                                    } else {
+                                      next.add(feedIndex);
+                                    }
+                                    return next;
+                                  });
+                                }}
+                                className="h-8 w-8 p-0"
                               >
-                                Remove Processor
+                                {isExpanded ? (
+                                  <ChevronUpIcon className="size-4" />
+                                ) : (
+                                  <ChevronDownIcon className="size-4" />
+                                )}
                               </Button>
                             </div>
-                          ))}
-                          <Button
-                            type="button"
-                            variant="default"
-                            onClick={() =>
-                              processorsField.pushValue({
-                                tag: '',
-                                variables: [],
-                                output: '',
-                              })
-                            }
-                            className={cn('border-none bg-green-950 text-white hover:bg-green-900')}
-                          >
-                            Add Processor
-                          </Button>
-                        </AnimatedDiv>
-                      )}
+                            {isExpanded && (
+                              <AnimatedDiv className="space-y-4">
+                                {tagsField.state.value.map((tag, tagIndex) => (
+                                  <div key={tag.key} className="flex gap-2 rounded-lg border p-4">
+                                    <form.AppField name={`rssFeeds[${feedIndex}].tags[${tagIndex}].tagName`}>
+                                      {(_) => <TextField label="Tag Name" placeholder="Enter XML tag name" />}
+                                    </form.AppField>
+                                    <form.AppField name={`rssFeeds[${feedIndex}].tags[${tagIndex}].patternId`}>
+                                      {(_) => (
+                                        <form.Subscribe selector={(state) => state.values.patterns}>
+                                          {(patterns) => {
+                                            const patternOptions: SelectOption[] = (patterns || [])
+                                              .filter((pattern) => pattern.id && pattern.id.trim() !== '')
+                                              .map((pattern) => ({
+                                                label: pattern.id,
+                                                value: pattern.id,
+                                              }));
+                                            return (
+                                              <SelectField
+                                                label="Pattern"
+                                                placeholder="Select a pattern"
+                                                options={patternOptions}
+                                              />
+                                            );
+                                          }}
+                                        </form.Subscribe>
+                                      )}
+                                    </form.AppField>
+                                    <Button
+                                      type="button"
+                                      variant="default"
+                                      onClick={() => tagsField.removeValue(tagIndex)}
+                                      className={cn('mt-8 border-none bg-red-950 text-white hover:bg-red-900')}
+                                    >
+                                      Remove
+                                    </Button>
+                                  </div>
+                                ))}
+                                <Button
+                                  type="button"
+                                  variant="default"
+                                  onClick={() =>
+                                    tagsField.pushValue({
+                                      key: crypto.randomUUID(),
+                                      tagName: '',
+                                      patternId: '',
+                                    })
+                                  }
+                                  className={cn('border-none bg-green-950 text-white hover:bg-green-900')}
+                                >
+                                  Add Tag
+                                </Button>
+                              </AnimatedDiv>
+                            )}
+                          </>
+                        );
+                      }}
                     </form.Field>
                   </div>
                   <Button
@@ -517,14 +461,217 @@ function SettingsFormContent() {
                 variant="default"
                 onClick={() =>
                   rssFeedsField.pushValue({
+                    key: crypto.randomUUID(),
                     id: '',
                     url: '',
-                    processors: [],
+                    tags: [],
                   })
                 }
                 className={cn('mt-2 w-full border-none bg-green-950 text-white hover:bg-green-900')}
               >
                 Add RSS Feed
+              </Button>
+            </AnimatedDiv>
+          </div>
+        )}
+      </form.Field>
+
+      <form.Field name="patterns">
+        {(patternsField) => (
+          <div>
+            <h3 className="text-2l mb-4 pt-4 font-bold">Patterns</h3>
+            <AnimatedDiv className="space-y-6">
+              {patternsField.state.value.map((pattern, patternIndex) => (
+                <div key={pattern.key} className="mb-4 flex flex-col gap-2 rounded-lg border p-4">
+                  <form.AppField name={`patterns[${patternIndex}].id`}>
+                    {(_) => <TextField label="Pattern Identifier" placeholder="Enter a name for this pattern" />}
+                  </form.AppField>
+                  <form.AppField name={`patterns[${patternIndex}].output`}>
+                    {(_) => <TextField label="Output Template" placeholder="Enter output template" />}
+                  </form.AppField>
+                  <div>
+                    <form.Field name={`patterns[${patternIndex}].variables`}>
+                      {(variablesField) => {
+                        const patternKey = pattern.key || `pattern-${patternIndex}`;
+                        const isExpanded = expandedVariablesPatterns.has(patternKey);
+                        const variableCount = variablesField.state.value.length;
+                        return (
+                          <>
+                            <div className="mb-2 flex items-center justify-between">
+                              <label className="block font-medium">
+                                Variables{' '}
+                                {variableCount > 0 && (
+                                  <span className="text-muted-foreground">({variableCount})</span>
+                                )}
+                              </label>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setExpandedVariablesPatterns((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(patternKey)) {
+                                      next.delete(patternKey);
+                                    } else {
+                                      next.add(patternKey);
+                                    }
+                                    return next;
+                                  });
+                                }}
+                                className="h-8 w-8 p-0"
+                              >
+                                {isExpanded ? (
+                                  <ChevronUpIcon className="size-4" />
+                                ) : (
+                                  <ChevronDownIcon className="size-4" />
+                                )}
+                              </Button>
+                            </div>
+                            {isExpanded && (
+                              <AnimatedDiv className="space-y-3">
+                                {variablesField.state.value.map((variable, variableIndex) => (
+                            <div
+                              key={variable.key /* must use key for reorder */}
+                              className="rounded border p-3"
+                            >
+                              <form.AppField
+                                name={`patterns[${patternIndex}].variables[${variableIndex}].name`}
+                              >
+                                {(_) => (
+                                  <TextField
+                                    label="Variable Name"
+                                    placeholder="Enter variable name to persist to"
+                                  />
+                                )}
+                              </form.AppField>
+                              <form.AppField
+                                name={`patterns[${patternIndex}].variables[${variableIndex}].from`}
+                              >
+                                {(_) => (
+                                  <TextField
+                                    label="Base Var"
+                                    placeholder="Enter source variable name or leave empty to use source text"
+                                  />
+                                )}
+                              </form.AppField>
+                              <form.AppField
+                                name={`patterns[${patternIndex}].variables[${variableIndex}].regex`}
+                              >
+                                {(_) => (
+                                  <TextField label="Regex Pattern" placeholder="Enter regex pattern" />
+                                )}
+                              </form.AppField>
+                              <form.AppField
+                                name={`patterns[${patternIndex}].variables[${variableIndex}].replaceWith`}
+                              >
+                                {(_) => (
+                                  <TextField label="Replace With" placeholder="Enter replacement string" />
+                                )}
+                              </form.AppField>
+                              <div className="mt-2 flex gap-2">
+                                {variableIndex > 0 && (
+                                  <Button
+                                    type="button"
+                                    variant="default"
+                                    onClick={() => {
+                                      const current = variablesField.state.value[variableIndex];
+                                      const previous = variablesField.state.value[variableIndex - 1];
+                                      if (!current || !previous) return;
+                                      variablesField.setValue((prev) => {
+                                        const newValue = [...prev];
+                                        newValue[variableIndex - 1] = current;
+                                        newValue[variableIndex] = previous;
+                                        return newValue;
+                                      });
+                                    }}
+                                    className={cn(
+                                      'flex-1 border-none bg-blue-950 text-white hover:bg-blue-900',
+                                    )}
+                                  >
+                                    Move Up
+                                  </Button>
+                                )}
+                                {variableIndex < variablesField.state.value.length - 1 && (
+                                  <Button
+                                    type="button"
+                                    variant="default"
+                                    onClick={() => {
+                                      const current = variablesField.state.value[variableIndex];
+                                      const next = variablesField.state.value[variableIndex + 1];
+                                      if (!current || !next) return;
+                                      variablesField.setValue((prev) => {
+                                        const newValue = [...prev];
+                                        newValue[variableIndex] = next;
+                                        newValue[variableIndex + 1] = current;
+                                        return newValue;
+                                      });
+                                    }}
+                                    className={cn(
+                                      'flex-1 border-none bg-blue-950 text-white hover:bg-blue-900',
+                                    )}
+                                  >
+                                    Move Down
+                                  </Button>
+                                )}
+                                <Button
+                                  type="button"
+                                  variant="default"
+                                  onClick={() => variablesField.removeValue(variableIndex)}
+                                  className={cn('flex-1 border-none bg-red-950 text-white hover:bg-red-900')}
+                                >
+                                  Remove Variable
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                                <Button
+                                  type="button"
+                                  variant="default"
+                                  onClick={() =>
+                                    variablesField.pushValue({
+                                      key: crypto.randomUUID(),
+                                      name: '',
+                                      from: '',
+                                      regex: '',
+                                      replaceWith: '',
+                                    })
+                                  }
+                                  className={cn('border-none bg-green-950 text-white hover:bg-green-900')}
+                                >
+                                  Add Variable
+                                </Button>
+                              </AnimatedDiv>
+                            )}
+                          </>
+                        );
+                      }}
+                    </form.Field>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="default"
+                    onClick={() => patternsField.removeValue(patternIndex)}
+                    className={cn('mt-2 border-none bg-red-950 text-white hover:bg-red-900')}
+                  >
+                    Remove Pattern
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="default"
+                onClick={() =>
+                  patternsField.pushValue({
+                    key: crypto.randomUUID(),
+                    id: '',
+                    variables: [],
+                    output: '',
+                  })
+                }
+                className={cn('mt-2 w-full border-none bg-green-950 text-white hover:bg-green-900')}
+              >
+                Add Pattern
               </Button>
             </AnimatedDiv>
           </div>
