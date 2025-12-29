@@ -1,3 +1,4 @@
+// this is for /postRelease endpoint only
 {
     "title": "{{.TorrentName}}",
     "infoUrl": "{{.InfoUrl}}",

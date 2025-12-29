@@ -75,6 +75,7 @@ Add a webhook in autobrr with the following settings:
   ![Example autobrr webhook configuration](docs/autobrr.png)
 
 - **Body:**
+With the following body:
 ```json
   {
     "query": "{{.Title}}",
@@ -90,6 +91,10 @@ Add a webhook in autobrr with the following settings:
     }
   }
 ```
+
+Mediaddr will search the movie on TMDB to fetch it's id. Then it will add the movie into Radarr. Lastly, if the release is populated, it will offer the release to Radarr. 
+
+> If the `indexer` matches the `alias` of any of the text transform patterns, it will execute the pattern on the `title` before pushing the release. See text transform patterns section for more information.
 
 You can also add `"tmdbId": {{ .Tags }}` if some of your trackers support tmdbId on the parsing. The API supports both query-based search (`query` + `year`) and direct TMDB ID lookup (`tmdbId`).
 
@@ -122,7 +127,7 @@ See the Sanitize API Endpoint section below for further information.
 
 > **Important:**
 > Any release that will be pushed through radarr using mediaddrr will use the external indexer identifier to match on which pattern must be executed. If a corresponding alias is found in the patterns, it will execute on the release string before forwarding to Radarr. This is what allows text-transformation to be executed with any type of feed.
-> ![Correct autobrr action order](docs/patterns.png)
+> ![How to get your pattern to execute during movie add](docs/patterns.png)
 
 
 ### Pattern Tester
@@ -137,24 +142,7 @@ The Pattern Tester page (`/patternTester`) allows you to test your patterns inte
 
 This is useful for debugging and refining your patterns before using them in production.
 
-### Sanitize API Endpoint
-
-The sanitize endpoint allows you to programmatically transform text using patterns:
-
-**GET Request:**
-```
-GET /api/sanitize/[pattern-id]?input=your+text+here
-```
-
-**POST Request:**
-```
-POST /api/sanitize/[pattern-id]
-Content-Type: text/plain
-
-your text here
-```
-
-Both methods return the transformed text as plain text. The pattern ID must match one of your configured patterns.
+![How to test your pattern](docs/pattern_tester.png)
 
 ### RSS Feeds
 

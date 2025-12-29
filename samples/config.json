@@ -28,30 +28,30 @@
     "BJShareFilmes": {
       "url": "BJSHARE_FILMES_RSS_URL",
       "tags": {
-        "title": "BJSharePattern"
+        "title": "BJShare"
       }
     },
     "CBRFilmes4K": {
       "url": "CBR_FILMES_4K_RSS_URL",
       "tags": {
-        "title": "CapybaraBRPattern"
+        "title": "CapybaraBR"
       }
     },
     "CBRFilmesHD": {
       "url": "CBR_FILMES_HD_RSS_URL",
       "tags": {
-        "title": "CapybaraBRPattern"
+        "title": "CapybaraBR"
       }
     },
     "CBRMidia": {
       "url": "CBR_MIDIA_RSS_URL",
       "tags": {
-        "title": "CapybaraBRPattern"
+        "title": "CapybaraBR"
       }
     }
   },
   "patterns": {
-    "BJSharePattern": {
+    "BJShare": {
       "aliases": [
         "bjshare-irc",
         "bjshare",
@@ -134,7 +134,7 @@
       ],
       "output": "${title} [${year}] ${meta}"
     },
-    "CapybaraBRPattern": {
+    "CapybaraBR": {
       "aliases": [
         "capybarabr-irc",
         "capybarabr",
