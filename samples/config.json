@@ -1,0 +1,161 @@
+{
+    "tmdbConfig": {
+      "token": "TMDB_API_TOKEN"
+    },
+    "radarrInstances": {
+      "radarr-uhd": {
+        "baseUrl": "http://radarr-uhd:7878",
+        "apiKey": "RADARR_UHD_API_KEY",
+        "qualityProfileId": 10,
+        "tagId0": 18,
+        "rootFolderPath": "/media/movies-uhd"
+      },
+      "radarr-hd": {
+        "baseUrl": "http://radarr-hd:7878",
+        "apiKey": "RADARR_HD_API_KEY",
+        "qualityProfileId": 7,
+        "tagId0": 8,
+        "rootFolderPath": "/media/movies-hd"
+      }
+    },
+    "rssFeeds": {
+      "BJShareMidia": {
+        "url": "BJSHARE_MIDIA_RSS_URL",
+        "tags": {
+          "title": "BJShare"
+        }
+      },
+      "BJShareFilmes": {
+        "url": "BJSHARE_FILMES_RSS_URL",
+        "tags": {
+          "title": "BJSharePattern"
+        }
+      },
+      "CBRFilmes4K": {
+        "url": "CBR_FILMES_4K_RSS_URL",
+        "tags": {
+          "title": "CapybaraBRPattern"
+        }
+      },
+      "CBRFilmesHD": {
+        "url": "CBR_FILMES_HD_RSS_URL",
+        "tags": {
+          "title": "CapybaraBRPattern"
+        }
+      },
+      "CBRMidia": {
+        "url": "CBR_MIDIA_RSS_URL",
+        "tags": {
+          "title": "CapybaraBRPattern"
+        }
+      }
+    },
+    "patterns": {
+      "BJSharePattern": {
+        "variables": [
+          {
+            "name": "year",
+            "from": null,
+            "regex": ".*\\[(\\d{4})\\].*",
+            "replaceWith": "$1"
+          },
+          {
+            "name": "rawTitle",
+            "from": null,
+            "regex": "\\[\\d{4}\\].*",
+            "replaceWith": ""
+          },
+          {
+            "name": "title",
+            "from": "rawTitle",
+            "regex": ".*?\\[(.*?)(\\[.*\\])?\\].*",
+            "replaceWith": "$1"
+          },
+          {
+            "name": "rawMeta",
+            "from": null,
+            "regex": ".*\\[\\d{4}\\](.*)",
+            "replaceWith": "$1"
+          },
+          {
+            "name": "meta",
+            "from": "rawMeta",
+            "regex": "Dual .udio",
+            "replaceWith": "Dual Audio Original Brazilian"
+          },
+          {
+            "name": "meta",
+            "from": "meta",
+            "regex": "(Legendado|Nacional)",
+            "replaceWith": "Original Audio $1"
+          },
+          {
+            "name": "meta",
+            "from": "meta",
+            "regex": "Full HD",
+            "replaceWith": "1080p"
+          },
+          {
+            "name": "meta",
+            "from": "meta",
+            "regex": "4K",
+            "replaceWith": "2160p"
+          },
+          {
+            "name": "meta",
+            "from": "meta",
+            "regex": "SD",
+            "replaceWith": "480p"
+          },
+          {
+            "name": "meta",
+            "from": "meta",
+            "regex": "/ HD]",
+            "replaceWith": "720p"
+          },
+          {
+            "name": "meta",
+            "from": "meta",
+            "regex": "/ HD /",
+            "replaceWith": "720p"
+          },
+          {
+            "name": "meta",
+            "from": "meta",
+            "regex": "[\\[\\]]+",
+            "replaceWith": ""
+          }
+        ],
+        "output": "${title} [${year}] ${meta}"
+      },
+      "CapybaraBRPattern": {
+        "variables": [
+          {
+            "name": "title",
+            "from": null,
+            "regex": "(.*)",
+            "replaceWith": "$1"
+          },
+          {
+            "name": "brazilian",
+            "from": null,
+            "regex": ".*?(?:\\b(DUAL|MULTI|Dublado|Nacional|Brazilian|Portuguese)\\b|$)",
+            "replaceWith": "$1"
+          },
+          {
+            "name": "brazilian",
+            "from": "brazilian",
+            "regex": "(?:\\b(DUAL|MULTI|Dublado|Nacional|Brazilian|Portuguese)\\b|^).*",
+            "replaceWith": "$1"
+          },
+          {
+            "name": "brazilian",
+            "from": "brazilian",
+            "regex": "^(.+)$",
+            "replaceWith": "$1 Original Brazilian"
+          }
+        ],
+        "output": "${title} / ${brazilian}"
+      }
+    }
+  }
