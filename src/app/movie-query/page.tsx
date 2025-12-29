@@ -78,20 +78,20 @@ export default function MovieQueryPage() {
             placeholder="Enter movie title"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             className="w-full"
           />
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="year">Year (Optional)</Label>
+          <Label htmlFor="year">Year (Preferable to use when querying by title)</Label>
           <Input
             id="year"
             type="number"
             placeholder="Enter release year"
             value={yearInput}
             onChange={(e) => handleYearChange(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             className="w-full"
           />
         </div>
