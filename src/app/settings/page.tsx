@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { CenteredContainer } from '../../components/containers/CenteredContainer';
 import { createFormHook, FormApi } from '@tanstack/react-form';
 import { Button } from '~/components/ui/Button';
@@ -173,7 +174,7 @@ function SettingsFormContent() {
 
   // Expand all tags sections by default when form data is loaded
   useEffect(() => {
-    if (form.state.values.rssFeeds) {
+    if (Array.isArray(form.state.values.rssFeeds)) {
       const allFeedIndices = new Set(form.state.values.rssFeeds.map((_, index) => index));
       setExpandedTagsFeeds(allFeedIndices);
     }
@@ -199,6 +200,13 @@ function SettingsFormContent() {
 
   return (
     <CenteredContainer>
+      <div className="mb-4 flex justify-end">
+        <Link href="/patternTester">
+          <Button variant="outline" size="sm">
+            Pattern Tester
+          </Button>
+        </Link>
+      </div>
       <h1 className="mb-6 text-2xl font-bold">Settings</h1>
       <div>
         <h3 className="text-2l mb-4 font-bold">TMDB</h3>
@@ -221,7 +229,7 @@ function SettingsFormContent() {
           <div>
             <h3 className="text-2l mb-4 pt-4 font-bold">Radarr Instances</h3>
             <AnimatedDiv className="space-y-6">
-              {radarrField.state.value.map((_, radarrIndex) => (
+              {(Array.isArray(radarrField.state.value) ? radarrField.state.value : []).map((_, radarrIndex) => (
                 <div
                   key={radarrField.state?.value?.[radarrIndex]?.key}
                   className="mb-4 flex flex-col gap-2 rounded-lg border p-4"
@@ -335,7 +343,7 @@ function SettingsFormContent() {
           <div>
             <h3 className="text-2l mb-4 pt-4 font-bold">RSS Feeds</h3>
             <AnimatedDiv className="space-y-6">
-              {rssFeedsField.state.value.map((feed, feedIndex) => (
+              {(Array.isArray(rssFeedsField.state.value) ? rssFeedsField.state.value : []).map((feed, feedIndex) => (
                 <div key={feed.key} className="mb-4 flex flex-col gap-2 rounded-lg border p-4">
                   <form.AppField name={`rssFeeds[${feedIndex}].id`}>
                     {(_) => <TextField label="Feed Identifier" placeholder="Enter a name for this RSS feed" />}
@@ -389,7 +397,7 @@ function SettingsFormContent() {
                             </div>
                             {isExpanded && (
                               <AnimatedDiv className="space-y-4">
-                                {tagsField.state.value.map((tag, tagIndex) => (
+                                {(Array.isArray(tagsField.state.value) ? tagsField.state.value : []).map((tag, tagIndex) => (
                                   <div key={tag.key} className="flex gap-2 rounded-lg border p-4">
                                     <div className="flex-1">
                                       <form.AppField name={`rssFeeds[${feedIndex}].tags[${tagIndex}].tagName`}>
@@ -487,7 +495,7 @@ function SettingsFormContent() {
           <div>
             <h3 className="text-2l mb-4 pt-4 font-bold">Patterns</h3>
             <AnimatedDiv className="space-y-6">
-              {patternsField.state.value.map((pattern, patternIndex) => (
+              {(Array.isArray(patternsField.state.value) ? patternsField.state.value : []).map((pattern, patternIndex) => (
                 <div key={pattern.key} className="mb-4 flex flex-col gap-2 rounded-lg border p-4">
                   <form.AppField name={`patterns[${patternIndex}].id`}>
                     {(_) => <TextField label="Pattern Identifier" placeholder="Enter a name for this pattern" />}
@@ -536,7 +544,7 @@ function SettingsFormContent() {
                             </div>
                             {isExpanded && (
                               <AnimatedDiv className="space-y-3">
-                                {variablesField.state.value.map((variable, variableIndex) => (
+                                {(Array.isArray(variablesField.state.value) ? variablesField.state.value : []).map((variable, variableIndex) => (
                             <div
                               key={variable.key /* must use key for reorder */}
                               className="rounded border p-3"
