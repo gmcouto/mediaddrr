@@ -391,38 +391,44 @@ function SettingsFormContent() {
                               <AnimatedDiv className="space-y-4">
                                 {tagsField.state.value.map((tag, tagIndex) => (
                                   <div key={tag.key} className="flex gap-2 rounded-lg border p-4">
-                                    <form.AppField name={`rssFeeds[${feedIndex}].tags[${tagIndex}].tagName`}>
-                                      {(_) => <TextField label="Tag Name" placeholder="Enter XML tag name" />}
-                                    </form.AppField>
-                                    <form.AppField name={`rssFeeds[${feedIndex}].tags[${tagIndex}].patternId`}>
-                                      {(_) => (
-                                        <form.Subscribe selector={(state) => state.values.patterns}>
-                                          {(patterns) => {
-                                            const patternOptions: SelectOption[] = (patterns || [])
-                                              .filter((pattern) => pattern.id && pattern.id.trim() !== '')
-                                              .map((pattern) => ({
-                                                label: pattern.id,
-                                                value: pattern.id,
-                                              }));
-                                            return (
-                                              <SelectField
-                                                label="Pattern"
-                                                placeholder="Select a pattern"
-                                                options={patternOptions}
-                                              />
-                                            );
-                                          }}
-                                        </form.Subscribe>
-                                      )}
-                                    </form.AppField>
-                                    <Button
-                                      type="button"
-                                      variant="default"
-                                      onClick={() => tagsField.removeValue(tagIndex)}
-                                      className={cn('mt-8 border-none bg-red-950 text-white hover:bg-red-900')}
-                                    >
-                                      Remove
-                                    </Button>
+                                    <div className="flex-1">
+                                      <form.AppField name={`rssFeeds[${feedIndex}].tags[${tagIndex}].tagName`}>
+                                        {(_) => <TextField label="Tag Name" placeholder="Enter XML tag name" />}
+                                      </form.AppField>
+                                    </div>
+                                    <div className="flex-1">
+                                      <form.AppField name={`rssFeeds[${feedIndex}].tags[${tagIndex}].patternId`}>
+                                        {(_) => (
+                                          <form.Subscribe selector={(state) => state.values.patterns}>
+                                            {(patterns) => {
+                                              const patternOptions: SelectOption[] = (patterns || [])
+                                                .filter((pattern) => pattern.id && pattern.id.trim() !== '')
+                                                .map((pattern) => ({
+                                                  label: pattern.id,
+                                                  value: pattern.id,
+                                                }));
+                                              return (
+                                                <SelectField
+                                                  label="Pattern"
+                                                  placeholder="Select a pattern"
+                                                  options={patternOptions}
+                                                />
+                                              );
+                                            }}
+                                          </form.Subscribe>
+                                        )}
+                                      </form.AppField>
+                                    </div>
+                                    <div className="flex items-end pb-0.5">
+                                      <Button
+                                        type="button"
+                                        variant="default"
+                                        onClick={() => tagsField.removeValue(tagIndex)}
+                                        className={cn('h-9 border-none bg-red-950 text-white hover:bg-red-900')}
+                                      >
+                                        Remove
+                                      </Button>
+                                    </div>
                                   </div>
                                 ))}
                                 <Button
