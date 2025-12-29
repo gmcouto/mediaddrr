@@ -75,8 +75,8 @@ Add a webhook in autobrr with the following settings:
   ![Example autobrr webhook configuration](docs/autobrr.png)
 
 - **Body:**
-  ```json
-{
+```json
+  {
     "query": "{{.Title}}",
     "year": "{{.Year}}",
     "release": {
@@ -88,8 +88,9 @@ Add a webhook in autobrr with the following settings:
         "downloadProtocol": "{{.Protocol}}",
         "protocol": "{{.Protocol}}"
     }
-}
-  ```
+  }
+```
+
 You can also add `"tmdbId": {{ .Tags }}` if some of your trackers support tmdbId on the parsing. The API supports both query-based search (`query` + `year`) and direct TMDB ID lookup (`tmdbId`).
 
 ---
