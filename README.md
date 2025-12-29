@@ -6,13 +6,9 @@ mediaddrr is a web application designed to receive webhooks from [autobrr](https
 
 ## Features
 
-- Receives webhooks from autobrr
-- Adds movies to Radarr instances
-- TMDB integration for movie metadata (supports both query/year and TMDB ID)
-- RSS feed processing with pattern-based tag transformation
-- Pattern system for text transformation using regex variables
-- Pattern tester UI for testing and debugging patterns
-- Sanitize API endpoint for programmatic text transformation
+1. Adding NEW Movies into Radarr based on "Title + Year" query (as autobrr webhook)
+2. Pre-processed RSS feeds with pattern-based text transformation (so trackers RSS feeds match YOUR desired patterns)
+3. A pattern-based text transformation UI and API (so you can test it before usage)
 
 ---
 
