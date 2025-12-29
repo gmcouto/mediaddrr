@@ -60,44 +60,6 @@ After starting the app, navigate to the Settings page to configure mediaddrr:
 
 - Click **Save** when you are done configuring your settings.
 
-#### c. Patterns (Optional)
-
-Patterns allow you to transform text using regex-based variable extraction and replacement. This is useful for processing RSS feed tags or sanitizing text.
-
-- For each pattern you want to create:
-
-  - Enter a unique **Pattern Identifier** (e.g., `bjshare-pattern`).
-  - Define **Variables** that extract information from input text:
-    - **Variable Name**: A unique name for the variable (e.g., `title`, `year`).
-    - **From**: Optional. The name of another variable to use as input (leave empty to use the original input).
-    - **Regex**: A regular expression pattern to match and extract data.
-    - **Replace With**: The replacement pattern (use `$1`, `$2`, etc. for capture groups).
-  - Set the **Output Template**: A template string using `${variableName}` syntax to format the final output.
-
-- Example pattern structure:
-  - Variables extract `year` and `title` from input text like `[2024] Movie Title [1080p]`.
-  - Output template: `${title} [${year}] ${meta}` produces `Movie Title [2024] 1080p`.
-
-- You can test your patterns using the **Pattern Tester** page (accessible via the "Pattern Tester" button on the Settings page).
-
-#### d. RSS Feeds (Optional)
-
-RSS feeds can be processed and transformed using patterns before being served to clients.
-
-- For each RSS feed you want to configure:
-
-  - Enter a unique **RSS Feed Identifier** (e.g., `tracker-rss`).
-  - Set the **RSS Feed URL** (the source RSS feed to process).
-  - Configure **Tag Mappings**: Map XML tag names (e.g., `title`, `description`) to pattern identifiers that will transform those tags.
-
-- Access the processed RSS feed at:
-  ```
-  http://mediaddrr:3000/api/rss/[rss-id]
-  ```
-  Replace `[rss-id]` with your RSS feed identifier.
-
-- The processed feed will have all mapped tags transformed according to their assigned patterns.
-
 ### 3. Setting up the Webhook in autobrr
 
 Add a webhook in autobrr with the following settings:
@@ -133,6 +95,46 @@ You can also add `"tmdbId": {{ .Tags }}` if some of your trackers support tmdbId
 ---
 
 ## Additional Features
+
+### Patterns
+
+Patterns allow you to transform text using regex-based variable extraction and replacement. This is useful for processing RSS feed tags or sanitizing text. This can be used in autobrr for sanitizing IRC releases, for example.
+
+- For each pattern you want to create:
+
+  - Enter a unique **Pattern Identifier** (e.g., `bjshare-pattern`).
+  - Define **Variables** that extract information from input text:
+    - **Variable Name**: A unique name for the variable (e.g., `title`, `year`).
+    - **From**: Optional. The name of another variable to use as input (leave empty to use the original input).
+    - **Regex**: A regular expression pattern to match and extract data.
+    - **Replace With**: The replacement pattern (use `$1`, `$2`, etc. for capture groups).
+  - Set the **Output Template**: A template string using `${variableName}` syntax to format the final output.
+
+- Example pattern structure:
+  - Variables extract `year` and `title` from input text like `[2024] Movie Title [1080p]`.
+  - Output template: `${title} [${year}] ${meta}` produces `Movie Title [2024] 1080p`.
+
+- You can test your patterns using the **Pattern Tester** page (accessible via the "Pattern Tester" button on the Settings page).
+
+See the Sanitize API Endpoint section below for further information.
+
+### RSS Feeds
+
+RSS feeds can be processed and transformed using patterns before being served to clients.
+
+- For each RSS feed you want to configure:
+
+  - Enter a unique **RSS Feed Identifier** (e.g., `tracker-rss`).
+  - Set the **RSS Feed URL** (the source RSS feed to process).
+  - Configure **Tag Mappings**: Map XML tag names (e.g., `title`, `description`) to pattern identifiers that will transform those tags.
+
+- Access the processed RSS feed at:
+  ```
+  http://mediaddrr:3000/api/rss/[rss-id]
+  ```
+  Replace `[rss-id]` with your RSS feed identifier.
+
+- The processed feed will have all mapped tags transformed according to their assigned patterns.
 
 ### Pattern Tester
 
