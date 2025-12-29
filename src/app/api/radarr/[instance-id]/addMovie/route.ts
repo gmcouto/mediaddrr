@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { getRadarrInstance } from '~/domain/settings/util';
+import { getRadarrInstance, getSettings } from '~/domain/settings/util';
 import { addMovie } from '~/domain/radarr/addMovie';
 import { getFirstPopularTmdbMovie } from '~/domain/tmdb/getFirstPopularTmdbMovie';
 import { isValidTmdbId } from '~/domain/tmdb/isValidTmdbId';
@@ -34,6 +34,35 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     logger.error(`No movie found for query: ${query} and year: ${year}`);
     return NextResponse.json({ error: `No movie found for query: ${query} and year: ${year}` }, { status: 404 });
   }
+
+  // Validate TMDB filters
+  const settings = await getSettings();
+  const { minimumVoteAverage, minimumPopularity, minimumVoteCount } = settings.tmdbConfig;
+
+  if (minimumVoteAverage !== null && minimumVoteAverage !== undefined) {
+    if (tmdbMovie.vote_average < minimumVoteAverage) {
+      const errorMessage = `Movie "${tmdbMovie.title}" does not meet minimum vote average requirement: ${tmdbMovie.vote_average} < ${minimumVoteAverage}`;
+      logger.warn(errorMessage);
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
+    }
+  }
+
+  if (minimumPopularity !== null && minimumPopularity !== undefined) {
+    if (tmdbMovie.popularity < minimumPopularity) {
+      const errorMessage = `Movie "${tmdbMovie.title}" does not meet minimum popularity requirement: ${tmdbMovie.popularity} < ${minimumPopularity}`;
+      logger.warn(errorMessage);
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
+    }
+  }
+
+  if (minimumVoteCount !== null && minimumVoteCount !== undefined) {
+    if (tmdbMovie.vote_count < minimumVoteCount) {
+      const errorMessage = `Movie "${tmdbMovie.title}" does not meet minimum vote count requirement: ${tmdbMovie.vote_count} < ${minimumVoteCount}`;
+      logger.warn(errorMessage);
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
+    }
+  }
+
   const radarrInstance = await getRadarrInstance(instanceId);
   if (!radarrInstance) {
     logger.error(`Radarr instance not found: ${instanceId}`);
