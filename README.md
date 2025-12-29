@@ -121,6 +121,8 @@ See the Sanitize API Endpoint section below for further information.
 
 > **Important:**
 > Any release that will be pushed through radarr using mediaddrr will use the external indexer identifier to match on which pattern must be executed. If a corresponding alias is found in the patterns, it will execute on the release string before forwarding to Radarr. This is what allows text-transformation to be executed with any type of feed.
+> ![Correct autobrr action order](docs/patterns.png)
+
 
 ### Pattern Tester
 
