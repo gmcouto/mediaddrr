@@ -1,7 +1,7 @@
 services:
   mediaddrr:
-    build: .
-    # image: gmcouto/mediaddrr:0.3.0
+    # build: .
+    image: gmcouto/mediaddrr:latest
     container_name: mediaddrr
     ports:
       - '3000:3000'
