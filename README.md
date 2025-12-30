@@ -7,7 +7,7 @@ mediaddrr is a web application designed to receive webhooks from [autobrr](https
 ## Main Features
 
 1. Add NEW Movies into Radarr based on "Title + Year" query (as autobrr webhook).
-2. Filter which new movies can be added using some TMDB query filters, like vote average, minimum votes, and popularity (Avoid adding awful releases)
+2. Filter which new movies can be added using some TMDB data, like vote average, minimum votes, and popularity (Avoid adding awful releases)
 3. Push release to Radarr with text-transformation (So releases will follow YOUR desired pattern)
 
 It also allows you making mediaddr an RSS-server proxy with text-transformation, but I think it will be deprecated, as pushing the release with text-transformation will work with any kind of feed. 
