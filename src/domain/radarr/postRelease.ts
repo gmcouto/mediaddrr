@@ -13,6 +13,7 @@ export type PostRadarrReleaseRequest = {
   publishDate: string;
   indexer: string;
   size: number;
+  tmdbId?: number;
 };
 
 export async function postRelease(

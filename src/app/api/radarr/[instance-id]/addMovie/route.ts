@@ -9,7 +9,7 @@ import type { TmdbMovieDetail } from '~/domain/tmdb/types';
 import { requestBodySchema } from './schema';
 import { postRelease } from '~/domain/radarr/postRelease';
 
-const PUSH_DELAY_SECONDS = 3;
+const PUSH_DELAY_SECONDS = 1;
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ 'instance-id': string }> }) {
   const { 'instance-id': instanceId } = await params;
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     title: tmdbMovie.title,
   });
 
-  if (data.release) {
+  if (data.release && tmdbMovie.id) {
     const release = data.release;
     logger.info(
       `Release has been detected for ${release.title}, attempting to push to radarr in ${PUSH_DELAY_SECONDS} second...`,
@@ -91,6 +91,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           publishDate: new Date().toISOString(),
           indexer: release.indexer,
           size: release.size,
+          tmdbId: tmdbMovie.id,
         };
 
         const postReleaseResponse = await postRelease(radarrInstance, postReleasePayload);
