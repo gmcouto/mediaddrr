@@ -3,11 +3,12 @@ import { NextResponse } from 'next/server';
 import { getRadarrInstance, getSettings } from '~/domain/settings/util';
 import { addMovie } from '~/domain/radarr/addMovie';
 import { getFirstPopularTmdbMovie } from '~/domain/tmdb/getFirstPopularTmdbMovie';
-import { isValidTmdbId } from '~/domain/tmdb/isValidTmdbId';
+import { getYearFromResponse, isValidTmdbId } from '~/domain/tmdb/isValidTmdbId';
 import { logger } from '~/logger';
 import type { TmdbMovieDetail } from '~/domain/tmdb/types';
 import { requestBodySchema } from './schema';
 import { postRelease } from '~/domain/radarr/postRelease';
+import { title } from 'process';
 
 const PUSH_DELAY_SECONDS = 1;
 
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
   }
   const { query, year, tmdbId } = data;
+  let tmdbYear: number | undefined;
   let tmdbMovie: TmdbMovieDetail | undefined;
   if (tmdbId) {
     const result = await isValidTmdbId(tmdbId, year);
@@ -31,12 +33,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     logger.info(
       `TMDB ID ${tmdbId} is valid for year ${year}. Found movie: ${tmdbMovie.title} (${tmdbMovie.release_date})`,
     );
+    tmdbYear = tmdbMovie.year;
   }
+  // try to get the movie from tmdb if we don't have tmdbId
   tmdbMovie ??= await getFirstPopularTmdbMovie(query, year);
   if (!tmdbMovie) {
     logger.error(`No movie found for query: ${query} and year: ${year}`);
     return NextResponse.json({ error: `No movie found for query: ${query} and year: ${year}` }, { status: 404 });
   }
+  tmdbYear = getYearFromResponse(tmdbMovie);
 
   // Validate TMDB filters
   const settings = await getSettings();
@@ -83,8 +88,21 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     );
     setTimeout(async () => {
       try {
+        // fix issues with autobrr replay where the year is empty. we can leverage release year instead.
+        let releaseYear: number | undefined;
+        if (year > 0) {
+          releaseYear = year;
+        } else {
+          const extractedYear = new RegExp(`\\b\\d{4}\\b`).exec(data?.release?.title ?? '')?.[0];
+          releaseYear = extractedYear ? Number(extractedYear) : undefined;
+        }
+        // fix issues with release with wrong year
+        const yearCorrectedTitle =
+          releaseYear != tmdbYear
+            ? release.title.replace((year || releaseYear)?.toString() ?? '', tmdbYear.toString())
+            : release.title;
         const postReleasePayload = {
-          title: release.title,
+          title: yearCorrectedTitle,
           infoUrl: release.infoUrl,
           downloadUrl: release.downloadUrl,
           protocol: release.protocol,
@@ -96,13 +114,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
         const postReleaseResponse = await postRelease(radarrInstance, postReleasePayload);
 
-        if (addMovieResponse.ok) {
+        if (postReleaseResponse.ok) {
           logger.info(`Successfully pushed release for "${release.title}" to Radarr for instance ${instanceId}`);
           return postReleaseResponse;
         } else {
-          logger.error(
-            `Failed to push release to Radarr for ${release.title}: ${addMovieResponse.statusText}`,
-          );
+          logger.error(`Failed to push release to Radarr for ${release.title}: ${addMovieResponse.statusText}`);
         }
       } catch (error) {
         logger.error(

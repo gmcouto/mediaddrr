@@ -99,4 +99,5 @@ export type TmdbMovieDetail = {
   readonly video: boolean;
   readonly vote_average: number;
   readonly vote_count: number;
+  year: number;
 };
