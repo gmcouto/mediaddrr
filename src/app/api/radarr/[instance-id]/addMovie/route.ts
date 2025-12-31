@@ -9,6 +9,8 @@ import type { TmdbMovieDetail } from '~/domain/tmdb/types';
 import { requestBodySchema } from './schema';
 import { postRelease } from '~/domain/radarr/postRelease';
 
+const PUSH_DELAY_SECONDS = 3;
+
 export async function POST(request: NextRequest, { params }: { params: Promise<{ 'instance-id': string }> }) {
   const { 'instance-id': instanceId } = await params;
   const body: unknown = await request.json();
@@ -75,34 +77,41 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   });
 
   if (data.release) {
-    logger.info(`Release has been detected for ${data.release.title}, attempting to push to radarr`);
-    try {
-      const postReleasePayload = {
-        title: data.release.title,
-        infoUrl: data.release.infoUrl,
-        downloadUrl: data.release.downloadUrl,
-        protocol: data.release.protocol,
-        publishDate: new Date().toISOString(),
-        indexer: data.release.indexer,
-        size: data.release.size,
-      };
+    const release = data.release;
+    logger.info(
+      `Release has been detected for ${release.title}, attempting to push to radarr in ${PUSH_DELAY_SECONDS} second...`,
+    );
+    setTimeout(async () => {
+      try {
+        const postReleasePayload = {
+          title: release.title,
+          infoUrl: release.infoUrl,
+          downloadUrl: release.downloadUrl,
+          protocol: release.protocol,
+          publishDate: new Date().toISOString(),
+          indexer: release.indexer,
+          size: release.size,
+        };
 
-      const postReleaseResponse = await postRelease(radarrInstance, postReleasePayload);
+        const postReleaseResponse = await postRelease(radarrInstance, postReleasePayload);
 
-      if (addMovieResponse.ok) {
-        logger.info(`Successfully pushed release for "${data.release.title}" to Radarr for instance ${instanceId}`);
-        return postReleaseResponse;
-      } else {
-        logger.error(`Failed to push release to Radarr for ${data.release?.title ?? 'unknown'}: ${addMovieResponse.statusText}`);
+        if (addMovieResponse.ok) {
+          logger.info(`Successfully pushed release for "${release.title}" to Radarr for instance ${instanceId}`);
+          return postReleaseResponse;
+        } else {
+          logger.error(
+            `Failed to push release to Radarr for ${release.title}: ${addMovieResponse.statusText}`,
+          );
+        }
+      } catch (error) {
+        logger.error(
+          `Failed to push release to Radarr for ${release.title}: ${
+            error instanceof Error ? error.message : JSON.stringify(error)
+          }`,
+        );
+        // fail gracefully because it could mean the release wont trump existing quality
       }
-    } catch (error) {
-      logger.error(
-        `Failed to push release to Radarr for ${data.release?.title ?? 'unknown'}: ${
-          error instanceof Error ? error.message : JSON.stringify(error)
-        }`,
-      );
-      // fail gracefully because it could mean the release wont trump existing quality
-    }
+    }, PUSH_DELAY_SECONDS * 1000);
   }
   return addMovieResponse;
 }
